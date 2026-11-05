@@ -188,7 +188,7 @@ internal enum class AppSymbol(
     SEARCH(R.drawable.icon_search),
     CALENDAR(R.drawable.icon_calendar),
     FILTER(R.drawable.icon_filter),
-    SETTINGS(R.drawable.icon_settings),
+    SETTINGS(R.drawable.icon_settings_asset),
     ACCOUNT(R.drawable.icon_account),
     REFRESH(R.drawable.icon_refresh),
     REFUND(R.drawable.icon_refund),
