@@ -1,0 +1,44 @@
+{
+  "contractVersion": 1,
+  "commandType": "dataset.clearRecords",
+  "aggregate": {
+    "type": "dataset",
+    "id": "authenticated owner UUID",
+    "groupCount": 1
+  },
+  "payload": {
+    "ledgerIds": "1..100 unique non-nil UUIDs; canonical authorization target sorts IDs",
+    "dependencyStrategy": "REJECT",
+    "confirmationToken": "required opaque single-use action token; maximum 4096 bytes"
+  },
+  "authorization": {
+    "operationKind": "DATASET_CLEAR_RECORDS",
+    "boundFields": [
+      "authenticated owner",
+      "actor session and auth version",
+      "active dataset epoch",
+      "expected dataset head sequence",
+      "sorted ledger IDs",
+      "dependency strategy"
+    ],
+    "consumption": "validated and consumed in the same transaction and savepoint as the financial reversal"
+  },
+  "idempotency": {
+    "digest": "existing sync push digest over the original wire group, including confirmationToken",
+    "receipt": "existing operation receipt by owner, epoch, and opId"
+  },
+  "privacy": {
+    "canonicalChanges": "confirmationToken and actionToken are removed before canonical change generation",
+    "conflictLocalCommand": "confirmationToken and actionToken are removed before persistence"
+  },
+  "effects": {
+    "preflight": "validate the complete selected ledger scope and supported dependency graph before writing any reversal",
+    "reversal": "only supported posted root records and their supported child records; unsupported or linked domains fail closed",
+    "financialWrites": "group savepoint makes grant consumption and all reversals atomic",
+    "acknowledgement": "successful clear returns snapshotRequired because the complete dataset may exceed canonical push limits"
+  },
+  "schemaCompatibility": {
+    "requiresDatasetSchema": 6,
+    "snapshotSchema": 5
+  }
+}

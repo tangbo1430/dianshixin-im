@@ -1,0 +1,1396 @@
+{
+  "schemaVersion": 1,
+  "policy": "D-claim-recovery-v1",
+  "specification": "docs/native-app/03-domain-and-calculations.md#5-报销",
+  "acceptance": "T10–T13 calculation scope only; AC-CLAIM transactions and UI remain separate",
+  "ordering": "Input receipt order is immutable server creation order, never client display/occurred-time order. Cancellation filters receipts then recomputes every surviving effect.",
+  "cases": [
+    {
+      "id": "pending-no-receipts",
+      "description": "Marking pending alone changes no expense or actual receipt.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [],
+      "expected": {
+        "status": "PENDING",
+        "received": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": "T10-partial-keep-60-of-100",
+      "description": "Receipt 60 reduces net expense to40 and leaves40 eligible.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "PARTIAL",
+        "received": {
+          "unscaled": "6000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "T11-complete-60-of-100",
+      "description": "Complete closes all100 principal; unreimbursed40 stays expense.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "6000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "T12-excess-120-of-100",
+      "description": "Only100 reduces expense; excess20 is income.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "12000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "12000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "exact-receipt-settles",
+      "description": "Exact partial receipt exhausts eligibility without a separate complete command.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "10000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-partial-receipts",
+      "description": "Receipts30 and20 leave50 eligible with no repeated original debit.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "3000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "2000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "PARTIAL",
+        "received": {
+          "unscaled": "5000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "5000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "5000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "3000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "3000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000002",
+            "processedPrincipal": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "later-receipt-excess",
+      "description": "A60 then B60 uses remaining40 and classifies20 as income.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "12000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000002",
+            "processedPrincipal": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "T13-cancel-earlier-reclassifies-survivor",
+      "description": "Cancel A60 after B60: B now reduces expense60; income20 disappears and complete closes40.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": true
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "6000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000002",
+            "processedPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "T13-cancel-latest-restores-pending",
+      "description": "Cancel B60: A60 remains and40 is eligible again.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": true
+        }
+      ],
+      "expected": {
+        "status": "PARTIAL",
+        "received": {
+          "unscaled": "6000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "T13-cancel-all-restores-original",
+      "description": "All cancelled receipts leave original100 and full100 eligibility.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": true
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": true
+        }
+      ],
+      "expected": {
+        "status": "PENDING",
+        "received": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": "partial-overpayment-exhausts-principal",
+      "description": "Overpayment in keep mode cannot leave negative eligibility.",
+      "original": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "12000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "12000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "mixed-scales-exact",
+      "description": "1.00 with receipts0.6 and0.400000 is exactly settled without rounding.",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "6",
+            "scale": 1,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "400000",
+            "scale": 6,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "100",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "60",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "60",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000002",
+            "processedPrincipal": {
+              "unscaled": "40",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "40",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-decimal-currency",
+      "description": "JPY uses exact whole currency values.",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "JPY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "60",
+            "scale": 0,
+            "currency": "JPY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "PARTIAL",
+        "received": {
+          "unscaled": "60",
+          "scale": 0,
+          "currency": "JPY"
+        },
+        "netExpense": {
+          "unscaled": "40",
+          "scale": 0,
+          "currency": "JPY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "JPY"
+        },
+        "remainingEligible": {
+          "unscaled": "40",
+          "scale": 0,
+          "currency": "JPY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "60",
+              "scale": 0,
+              "currency": "JPY"
+            },
+            "expenseReduction": {
+              "unscaled": "60",
+              "scale": 0,
+              "currency": "JPY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "JPY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "JPY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "six-decimal-boundary",
+      "description": "Smallest supported unit is conserved.",
+      "original": {
+        "unscaled": "2",
+        "scale": 6,
+        "currency": "USD"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "1",
+            "scale": 6,
+            "currency": "USD"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "PARTIAL",
+        "received": {
+          "unscaled": "1",
+          "scale": 6,
+          "currency": "USD"
+        },
+        "netExpense": {
+          "unscaled": "1",
+          "scale": 6,
+          "currency": "USD"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 6,
+          "currency": "USD"
+        },
+        "remainingEligible": {
+          "unscaled": "1",
+          "scale": 6,
+          "currency": "USD"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "1",
+              "scale": 6,
+              "currency": "USD"
+            },
+            "expenseReduction": {
+              "unscaled": "1",
+              "scale": 6,
+              "currency": "USD"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 6,
+              "currency": "USD"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 6,
+              "currency": "USD"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "i64-max-exact-receipt",
+      "description": "The largest bounded amount must work even if represented at scale0.",
+      "original": {
+        "unscaled": "9223372036854775807",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "9223372036854775807",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "status": "SETTLED",
+        "received": {
+          "unscaled": "9223372036854775807",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessIncome": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "remainingEligible": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "receiptId": "00000000-0000-0000-0000-000000000001",
+            "processedPrincipal": {
+              "unscaled": "9223372036854775807",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "expenseReduction": {
+              "unscaled": "9223372036854775807",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessIncome": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "closedUnreimbursed": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "zero-original",
+      "original": {
+        "unscaled": "0",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "negative-original",
+      "original": {
+        "unscaled": "-100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "zero-receipt",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "0",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "negative-receipt",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "-10",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "mixed-currency",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "60",
+            "scale": 2,
+            "currency": "USD"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "duplicate-receipt",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "20",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "30",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "cancelled-duplicate-still-invalid",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "20",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": true
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "30",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "nil-receipt-id",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000000",
+          "actualAmount": {
+            "unscaled": "60",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "receipt-after-complete",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "60",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "20",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "receipt-after-exhaustion",
+      "original": {
+        "unscaled": "100",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "100",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "20",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "nonrepresentable-net-expense",
+      "original": {
+        "unscaled": "9223372036854775807",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "1",
+            "scale": 6,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "AMOUNT_OVERFLOW"
+    },
+    {
+      "id": "cumulative-receipt-overflow",
+      "original": {
+        "unscaled": "9223372036854775807",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "receipts": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "actualAmount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "remainderAction": "PARTIAL_KEEP",
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "actualAmount": {
+            "unscaled": "9223372036854775807",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "remainderAction": "COMPLETE",
+          "cancelled": false
+        }
+      ],
+      "expectedError": "AMOUNT_OVERFLOW"
+    }
+  ]
+}

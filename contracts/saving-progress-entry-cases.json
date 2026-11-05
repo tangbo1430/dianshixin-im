@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "both-history-totals-exceed-i64-net-zero",
+      "target": {"unscaled":"1","scale":0,"currency":"CNY"},
+      "initialSaved": {"unscaled":"0","scale":0,"currency":"CNY"},
+      "deposits": [
+        {"unscaled":"9223372036854775807","scale":0,"currency":"CNY"},
+        {"unscaled":"10","scale":0,"currency":"CNY"}
+      ],
+      "withdrawals": [
+        {"unscaled":"9223372036854775807","scale":0,"currency":"CNY"},
+        {"unscaled":"10","scale":0,"currency":"CNY"}
+      ],
+      "expected": {
+        "saved": {"unscaled":"0","scale":0,"currency":"CNY"},
+        "remaining": {"unscaled":"1","scale":0,"currency":"CNY"}
+      }
+    },
+    {
+      "id": "mixed-scale-history",
+      "target": {"unscaled":"10000","scale":2,"currency":"CNY"},
+      "initialSaved": {"unscaled":"125","scale":2,"currency":"CNY"},
+      "deposits": [
+        {"unscaled":"25","scale":1,"currency":"CNY"},
+        {"unscaled":"5","scale":2,"currency":"CNY"}
+      ],
+      "withdrawals": [
+        {"unscaled":"10","scale":2,"currency":"CNY"}
+      ],
+      "expected": {
+        "saved": {"unscaled":"370","scale":2,"currency":"CNY"},
+        "remaining": {"unscaled":"9630","scale":2,"currency":"CNY"}
+      }
+    },
+    {
+      "id": "negative-net-preserved",
+      "target": {"unscaled":"10","scale":0,"currency":"CNY"},
+      "initialSaved": {"unscaled":"0","scale":0,"currency":"CNY"},
+      "deposits": [],
+      "withdrawals": [{"unscaled":"5","scale":0,"currency":"CNY"}],
+      "expected": {
+        "saved": {"unscaled":"-5","scale":0,"currency":"CNY"},
+        "remaining": {"unscaled":"15","scale":0,"currency":"CNY"}
+      }
+    },
+    {
+      "id": "over-target-progress",
+      "target": {"unscaled":"10","scale":0,"currency":"CNY"},
+      "initialSaved": {"unscaled":"0","scale":0,"currency":"CNY"},
+      "deposits": [{"unscaled":"15","scale":0,"currency":"CNY"}],
+      "withdrawals": [],
+      "expected": {
+        "saved": {"unscaled":"15","scale":0,"currency":"CNY"},
+        "remaining": {"unscaled":"0","scale":0,"currency":"CNY"}
+      }
+    },
+    {
+      "id": "true-saved-overflow",
+      "target": {"unscaled":"1","scale":0,"currency":"CNY"},
+      "initialSaved": {"unscaled":"0","scale":0,"currency":"CNY"},
+      "deposits": [
+        {"unscaled":"9223372036854775807","scale":0,"currency":"CNY"},
+        {"unscaled":"1","scale":0,"currency":"CNY"}
+      ],
+      "withdrawals": [],
+      "expectedError": "AMOUNT_OVERFLOW"
+    },
+    {
+      "id": "true-remaining-overflow",
+      "target": {"unscaled":"9223372036854775807","scale":0,"currency":"CNY"},
+      "initialSaved": {"unscaled":"0","scale":0,"currency":"CNY"},
+      "deposits": [],
+      "withdrawals": [{"unscaled":"1","scale":0,"currency":"CNY"}],
+      "expectedError": "AMOUNT_OVERFLOW"
+    },
+    {
+      "id": "currency-mismatch",
+      "target": {"unscaled":"10","scale":0,"currency":"CNY"},
+      "initialSaved": {"unscaled":"0","scale":0,"currency":"CNY"},
+      "deposits": [{"unscaled":"1","scale":0,"currency":"USD"}],
+      "withdrawals": [],
+      "expectedError": "INVALID_MONEY"
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "datasetSchemaVersion": 5,
+  "dataVersion": 4,
+  "commands": {
+    "credit.configure": {
+      "aggregateType": "account",
+      "aggregateId": "credit account UUID",
+      "baseVersions": [
+        "account:<aggregateId>",
+        "ledger/account references as required by the command pipeline"
+      ],
+      "payload": {
+        "creditProfile": {
+          "accountId": "UUID; must equal aggregateId",
+          "limit": {
+            "unscaled": "signed decimal integer string",
+            "scale": "integer 0..6",
+            "currency": "ISO-4217 code"
+          },
+          "statementDay": "integer 1..31",
+          "includeStatementDay": "boolean",
+          "repaymentRule": "FIXED_MONTH_DAY | DAYS_AFTER_STATEMENT",
+          "repaymentValue": "integer; 1..31 for fixed day, 1..366 for days after",
+          "timezone": "IANA time-zone identifier"
+        }
+      },
+      "effects": [
+        "upsert credit profile",
+        "increment account CAS revision",
+        "no financial posting"
+      ]
+    },
+    "credit.capacityAdjust": {
+      "aggregateType": "account",
+      "aggregateId": "credit account UUID",
+      "baseVersions": [
+        "account:<aggregateId>"
+      ],
+      "payload": {
+        "capacityDelta": {
+          "unscaled": "nonzero signed decimal integer string",
+          "scale": "integer 0..6",
+          "currency": "must match account currency"
+        },
+        "occurredAt": "RFC3339 instant",
+        "reason": "nonempty string, at most 512 bytes"
+      },
+      "effects": [
+        "append independent capacity event",
+        "increment account and profile revisions",
+        "no debt, income, budget, or statistical posting"
+      ]
+    },
+    "installment.create": {
+      "aggregateType": "installment",
+      "aggregateId": "new plan UUID",
+      "payload": {
+        "plan": {
+          "sourceType": "CONSUMPTION | BILL",
+          "sourceRecordId": "required for BILL, absent for CONSUMPTION",
+          "accountId": "LIABILITY account UUID",
+          "ledgerId": "same currency ledger UUID",
+          "principal": "positive Money",
+          "interest": "nonnegative Money in principal currency",
+          "termCount": "integer 1..1200",
+          "interestMode": "TERM_BY_TERM | FIRST_TERM",
+          "remainderMode": "FIRST_TERM | LAST_TERM",
+          "principalPosting": "TERM_BY_TERM | UPFRONT",
+          "capacityRestore": "nonnegative Money, no greater than principal",
+          "firstPostingDate": "YYYY-MM-DD local civil date",
+          "timezone": "IANA time-zone identifier"
+        }
+      }
+    },
+    "installment.update": {
+      "aggregateType": "installment",
+      "aggregateId": "plan UUID",
+      "payload": {
+        "fromTerm": "1-based index of the first scheduled term to replace",
+        "changes": "optional interest, termCount, interestMode, remainderMode, principalPosting, capacityRestore, firstPostingDate, timezone"
+      },
+      "rules": [
+        "all active terms from fromTerm must still be SCHEDULED",
+        "posted/paid history is immutable",
+        "old schedule rows remain SUPERSEDED"
+      ]
+    },
+    "installment.delete": {
+      "aggregateType": "installment",
+      "aggregateId": "plan UUID",
+      "payload": {
+        "strategy": "KEEP_POSTED | STOP_FUTURE | REVERSE_REVERSIBLE"
+      }
+    },
+    "installment.postTerm": {
+      "aggregateType": "installment",
+      "aggregateId": "plan UUID",
+      "payload": {
+        "termId": "UUID",
+        "occurredAt": "optional RFC3339 instant"
+      },
+      "rules": [
+        "worker-origin only",
+        "term must be SCHEDULED",
+        "job operation ID is the idempotency key"
+      ]
+    },
+    "installment.handoff": {
+      "aggregateType": "installment",
+      "aggregateId": "new plan UUID; base version is 0",
+      "payload": {
+        "localPlan": "create plan fields plus executor=LOCAL",
+        "postedTerms": "contiguous prefix from term 1 with localTermId, scheduledAt, occurredAt, unique localEventId and optional localRecordId",
+        "eventMappings": "one mapping per posted term: {termIndex,serverEventId,serverRecordId?}; record mapping required only for nonzero derived statistical expense",
+        "creationEventMapping": "required exactly when the accepted creation effect has nonzero posted debt delta",
+        "capacityMappings": "one mapping per posted term with the matching localTermId, and occupationEventId / restoreEventId required exactly when derived events are nonzero",
+        "paymentMappings": "optional [{localPaymentEventId,serverPaymentEventId,allocations:[{termIndex,amount}]}]; validates actual posted TRANSFER facts and appends allocation rows atomically"
+      },
+      "rules": [
+        "executor must be LOCAL",
+        "handoff links verified existing facts without replaying create/posting/statistics/budget/capacity effects for mapped history",
+        "term schedule timestamps must equal the civil-date/timezone-derived instant",
+        "payment allocations are bounded by actual payment remainder and posted-term principal plus interest",
+        "future terms receive SERVER runtime jobs in the same transaction"
+      ]
+    },
+    "credit.allocatePayment": {
+      "aggregateType": "account",
+      "aggregateId": "credit LIABILITY account UUID",
+      "baseVersions": [
+        "account:<aggregateId>"
+      ],
+      "payload": {
+        "paymentEventId": "same-owner/epoch POSTED TRANSFER with exactly two non-reversal postings: an equally valued negative credit-account LIABILITY posting and negative same-currency ASSET, CASH, or BANK posting",
+        "allocations": [
+          {
+            "termId": "POSTED installment term on this credit account",
+            "amount": "positive Money"
+          }
+        ]
+      },
+      "rules": [
+        "each command batch lists a term at most once; later batches may use the exact remaining payment amount, including allocations across different plans",
+        "aggregate allocations cannot exceed actual TRANSFER remainder or term principal plus interest",
+        "unallocated amount remains in the raw liability balance as prepayment; no income or second posting is created"
+      ]
+    }
+  },
+  "status": {
+    "implemented": [
+      "credit.configure",
+      "credit.capacityAdjust",
+      "installment.create",
+      "installment.update",
+      "installment.delete",
+      "worker installment.postTerm",
+      "credit.allocatePayment",
+      "installment.handoff source path",
+      "credit summary with outstanding scheduled and posted term allocations",
+      "runtime job reconstruction sweep"
+    ],
+    "notImplemented": [
+      "restore cutover integration"
+    ],
+    "partiallyImplemented": [
+      "restore cutover integration; no restore import module exists in supplied source"
+    ],
+    "notVerified": [
+      "PostgreSQL migration/transaction/worker/restore execution; database tests NOT_RUN"
+    ]
+  }
+}

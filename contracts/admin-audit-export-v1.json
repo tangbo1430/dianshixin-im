@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "kind": "admin_audit_export_contract",
+  "create": {
+    "method": "POST",
+    "path": "/admin/v1/audit/exports",
+    "authentication": "Opaque admin session; audit:read; actor/session/role version rechecked inside transaction",
+    "idempotency": "Non-nil UUID Idempotency-Key; same requester/session/roleVersion/filter digest returns original live artifact; changed input conflicts",
+    "body": {"from": "YYYY-MM-DD inclusive UTC", "to": "YYYY-MM-DD inclusive UTC", "action": "optional exact action", "targetType": "optional exact target type"},
+    "limits": {"maximumDays": 31, "maximumRows": 1000, "maximumPlainBytes": 2097152, "requestBytes": 4096},
+    "overLimit": "INVALID_REQUEST; narrowDateRange field; no partial or silently truncated export",
+    "successStatus": 201,
+    "data": {"jobId": "UUID", "state": "READY", "rowCount": "integer", "bytes": "integer", "sha256": "lowercase SHA-256", "createdAt": "RFC3339 UTC", "expiresAt": "RFC3339 UTC", "contentPath": "same-origin API relative path"}
+  },
+  "metadata": {"method": "GET", "path": "/admin/v1/audit/exports/{id}"},
+  "content": {"method": "GET", "path": "/admin/v1/audit/exports/{id}/content", "contentType": "application/json; charset=utf-8", "disposition": "attachment; filename=icos-audit.json", "format": "icos-admin-audit-export", "formatVersion": 1},
+  "access": "Metadata and content require same staff, exact originating session and current roleVersion; no bearer artifact URL. Cross-requester/session returns NOT_FOUND. Expired artifacts return IDEMPOTENCY_RECEIPT_EXPIRED. Artifact lifetime is 15 minutes.",
+  "privacy": [
+    "Same explicit action-specific safe projection as GET audit; unknown before/after and event reasons remain null.",
+    "Support-only role is restricted to own ADMIN_STAFF rows by SQL.",
+    "No joins to user PII or financial tables.",
+    "Result encrypted with existing AEAD and immutable export/staff/session/roleVersion AAD; digest and bytes verified on download.",
+    "Creation and authorized download each append audit in the same transaction before response.",
+    "No-store and nosniff on responses; JSON avoids spreadsheet formula evaluation."
+  ],
+  "retention": "Existing authentication maintenance clears at most 100 expired encrypted bodies per iteration with row locks; opId, digest and metadata remain to reject expired replays. No live artifact is cleared.",
+  "validation": {"postgres": "NOT_RUN", "browserBff": "IMPLEMENTED_COMBINED_ASSET_FIX_PENDING"},
+  "remaining": ["Combined production asset and browser acceptance", "Real PostgreSQL role, idempotency, isolation, expiry cleanup and audit rollback acceptance"]
+}

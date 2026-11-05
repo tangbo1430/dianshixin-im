@@ -1,0 +1,747 @@
+{
+  "fixture": "loan-posting-cases",
+  "version": 1,
+  "status": "COORDINATOR_FROZEN_NUMERICAL_REFERENCE_DESIGN_RULES_ONLY_NOT_U08_OR_RUST_PARITY",
+  "contractScenarioSHA256": "b75b970958a4ac37e87d3909ec00bfe1d8f7fbbb4f4d51bbd23f890e17c49de1",
+  "moneyConvention": "exact-unscaled-decimal-string/scale2/CNY; rates rational; HALF_UP final Money; stable month anchoring",
+  "base": {
+    "principal": {
+      "unscaled": "10000",
+      "scale": 2,
+      "currency": "CNY"
+    },
+    "annualRate": {
+      "numerator": 0,
+      "denominator": 1
+    },
+    "repaymentType": "EQUAL_PRINCIPAL",
+    "termCount": 3,
+    "paidTermCount": 0,
+    "firstDueDate": "2026-01-31",
+    "terms": [
+      {
+        "termIndex": 1,
+        "dueDate": "2026-01-31",
+        "openingPrincipal": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "principal": {
+          "unscaled": "3333",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "closingPrincipal": {
+          "unscaled": "6667",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "amount": {
+          "unscaled": "3333",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      },
+      {
+        "termIndex": 2,
+        "dueDate": "2026-02-28",
+        "openingPrincipal": {
+          "unscaled": "6667",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "principal": {
+          "unscaled": "3333",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "closingPrincipal": {
+          "unscaled": "3334",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "amount": {
+          "unscaled": "3333",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      },
+      {
+        "termIndex": 3,
+        "dueDate": "2026-03-31",
+        "openingPrincipal": {
+          "unscaled": "3334",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "principal": {
+          "unscaled": "3334",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "closingPrincipal": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "amount": {
+          "unscaled": "3334",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "rate-change-after-actual-first-payment",
+      "precondition": {
+        "term1Paid": true,
+        "term1Immutable": {
+          "termIndex": 1,
+          "dueDate": "2026-01-31",
+          "openingPrincipal": {
+            "unscaled": "10000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "principal": {
+            "unscaled": "3333",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "interest": {
+            "unscaled": "0",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "closingPrincipal": {
+            "unscaled": "6667",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "amount": {
+            "unscaled": "3333",
+            "scale": 2,
+            "currency": "CNY"
+          }
+        },
+        "cash": {
+          "unscaled": "6667",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "liability": {
+          "unscaled": "6667",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "expectedVersion": 2
+      },
+      "input": {
+        "effectiveTerm": 2,
+        "annualRate": {
+          "numerator": 12,
+          "denominator": 100
+        }
+      },
+      "expected": {
+        "prefixUnchanged": true,
+        "suffix": [
+          {
+            "termIndex": 2,
+            "dueDate": "2026-02-28",
+            "openingPrincipal": {
+              "unscaled": "6667",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "3334",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "67",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "3333",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "3401",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 3,
+            "dueDate": "2026-03-31",
+            "openingPrincipal": {
+              "unscaled": "3333",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "3333",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "33",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "3366",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ],
+        "remainingPrincipal": {
+          "unscaled": "6667",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "remainingScheduledInterest": {
+          "unscaled": "100",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "newVersion": 3,
+        "financialEventsCreatedByAdjustment": 0
+      }
+    },
+    {
+      "id": "only-this-term-reject-principal-leak",
+      "input": {
+        "termIndex": 2,
+        "principal": {
+          "unscaled": "3000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "500",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "futurePolicy": "ONLY_THIS_TERM"
+      },
+      "expected": {
+        "rejectAtomically": true,
+        "reason": "remaining principal 10000 would become 9667",
+        "planTermsJournalAndFactsUnchanged": true
+      }
+    },
+    {
+      "id": "only-this-term-accept-interest-only",
+      "input": {
+        "termIndex": 2,
+        "principal": {
+          "unscaled": "3333",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "500",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "futurePolicy": "ONLY_THIS_TERM"
+      },
+      "expected": {
+        "terms": [
+          {
+            "termIndex": 1,
+            "dueDate": "2026-01-31",
+            "openingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "3333",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "6667",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "3333",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 2,
+            "dueDate": "2026-02-28",
+            "openingPrincipal": {
+              "unscaled": "6667",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "3333",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "500",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "3334",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "3833",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 3,
+            "dueDate": "2026-03-31",
+            "openingPrincipal": {
+              "unscaled": "3334",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "3334",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "3334",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ],
+        "remainingAllPrincipal": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "financialEventsCreatedByAdjustment": 0
+      }
+    },
+    {
+      "id": "fixed-future-amount-explicit-tail",
+      "input": {
+        "termIndex": 1,
+        "principal": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "futurePolicy": "FIXED_FUTURE_AMOUNT"
+      },
+      "expected": {
+        "terms": [
+          {
+            "termIndex": 1,
+            "dueDate": "2026-01-31",
+            "openingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 2,
+            "dueDate": "2026-02-28",
+            "openingPrincipal": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 3,
+            "dueDate": "2026-03-31",
+            "openingPrincipal": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ],
+        "futureTargetAmount": {
+          "unscaled": "4000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "lastActualAmount": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "tailAdjustmentVisible": true,
+        "sumPrincipal": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "financialEventsCreatedByAdjustment": 0
+      }
+    },
+    {
+      "id": "fixed-future-zero-due-not-fabricated-paid",
+      "input": {
+        "termIndex": 1,
+        "principal": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "interest": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "futurePolicy": "FIXED_FUTURE_AMOUNT"
+      },
+      "expected": {
+        "terms": [
+          {
+            "termIndex": 1,
+            "dueDate": "2026-01-31",
+            "openingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 2,
+            "dueDate": "2026-02-28",
+            "openingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 3,
+            "dueDate": "2026-03-31",
+            "openingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ],
+        "zeroDueTermIndices": [
+          2,
+          3
+        ],
+        "autoPaidRows": 0,
+        "financialEventsCreatedByAdjustment": 0,
+        "sumPrincipal": {
+          "unscaled": "10000",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      }
+    },
+    {
+      "id": "interest-first-genuine-zero-due-settlement",
+      "override": {
+        "repaymentType": "INTEREST_ONLY",
+        "annualRate": {
+          "numerator": 0,
+          "denominator": 1
+        },
+        "terms": [
+          {
+            "termIndex": 1,
+            "dueDate": "2026-01-31",
+            "openingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 2,
+            "dueDate": "2026-02-28",
+            "openingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "termIndex": 3,
+            "dueDate": "2026-03-31",
+            "openingPrincipal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "principal": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "interest": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "closingPrincipal": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "amount": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ]
+      },
+      "input": {
+        "termIndex": 1,
+        "amount": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      },
+      "expected": {
+        "settled": true,
+        "journalDelta": 1,
+        "financialEventDelta": 0,
+        "recordDelta": 0,
+        "postingDelta": 0,
+        "cashDelta": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "liabilityDelta": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "newOpIdDuplicateSettlementRejectsEvenWithNullPaidEventId": true
+      }
+    }
+  ],
+  "referenceRevision": "1a-existing-RepaymentMethod-enum-correction"
+}

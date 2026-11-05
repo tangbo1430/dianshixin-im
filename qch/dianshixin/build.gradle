@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
+    id 'com.google.devtools.ksp'
+}
+
+android {
+    namespace 'dev.icos.app'
+    compileSdk 37
+    defaultConfig {
+        minSdk 28
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        buildConfigField 'String', 'AUTH_API_ORIGIN', '"https://www.xmjcmy.com:18445"'
+        buildConfigField 'String', 'VERSION_NAME', '"0.2.0"'
+        buildConfigField 'int', 'VERSION_CODE', '2'
+    }
+    buildFeatures { compose true; buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
+    }
+    kotlinOptions { jvmTarget = '17' }
+    sourceSets {
+        main.resources.srcDir rootProject.file('../contracts')
+        androidTest.assets.srcDir rootProject.file('../contracts')
+    }
+    packaging.resources.excludes += ['README.md', 'financial-cases.json', 'claim-recovery-cases.json', 'refund-recovery-cases.json']
+}
+
+ksp { arg('room.schemaLocation', "$projectDir/schemas") }
+
+dependencies {
+    implementation platform('androidx.compose:compose-bom:2026.09.00')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.activity:activity-compose:1.12.4'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.10.0'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    implementation 'androidx.room:room-runtime:2.8.5'
+    implementation 'net.zetetic:sqlcipher-android:4.19.1'
+    implementation 'androidx.sqlite:sqlite:2.7.0'
+    ksp 'androidx.room:room-compiler:2.8.5'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'net.sf.kxml:kxml2:2.3.0'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="demo_main_tab_text_selected_color_light">#EE6B02</color>
+    <color name="demo_navigate_bar_bg_light">#F9F9F9</color>
+
+    <color name="demo_login_theme_language_text_color_light">#444444</color>
+
+</resources>

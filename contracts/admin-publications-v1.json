@@ -1,0 +1,18 @@
+{
+  "contract": "admin-publications-v1",
+  "routes": [
+    {"method":"GET","path":"/v1/configuration","permission":"public","result":"latest published non-secret allowlist"},
+    {"method":"GET","path":"/v1/updates/android?channel=stable","permission":"public","result":"currently pointed published artifact metadata"},
+    {"method":"GET","path":"/v1/legal/{privacy|terms}?locale=zh-CN","permission":"public","result":"latest published immutable document"},
+
+    {"method":"POST","path":"/admin/v1/configurations","permission":"config:write","idempotencyHeader":"Idempotency-Key","required":["opId","expectedVersion","reason","values"]},
+    {"method":"POST","path":"/admin/v1/configurations/{id}/publish","permission":"config:publish","idempotencyHeader":"Idempotency-Key","required":["opId","expectedVersion","reason","recentMfaToken"]},
+    {"method":"GET","path":"/admin/v1/releases","permission":"release:read"},
+    {"method":"POST","path":"/admin/v1/releases","permission":"release:write","idempotencyHeader":"Idempotency-Key","required":["opId","expectedVersion","reason","channel"]},
+    {"method":"POST","path":"/admin/v1/releases/{id}/publish","permission":"release:publish","idempotencyHeader":"Idempotency-Key","required":["opId","expectedVersion","reason","recentMfaToken"]},
+    {"method":"GET","path":"/admin/v1/legal","permission":"legal:read"},
+    {"method":"POST","path":"/admin/v1/legal","permission":"legal:write","idempotencyHeader":"Idempotency-Key","required":["opId","expectedVersion","reason","kind","locale","content","changeSummary"]},
+    {"method":"POST","path":"/admin/v1/legal/{id}/publish","permission":"legal:publish","idempotencyHeader":"Idempotency-Key","required":["opId","expectedVersion","reason","recentMfaToken"]}
+  ],
+  "invariants": ["Rust authorizes every request", "recent MFA grant is bound to action, target, opId and expectedVersion", "receipt and audit are committed with publication facts", "published legal content and release artifacts are immutable", "rollback creates a new draft"]
+}

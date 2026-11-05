@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "moneyEncoding": "unscaled decimal string, scale 0..6, ISO currency",
+  "cases": [
+    {
+      "id": "principal-100-refund-120-toggle-off-on",
+      "kind": "postgres_refund_summary_and_replay",
+      "principal": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "amount": {
+            "unscaled": "12000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "12000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-0000-0000-000000000001",
+            "expenseReduction": {
+              "unscaled": "10000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ],
+        "statIncomeWhenPreferenceOff": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "statIncomeWhenPreferenceOn": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "budgetExpenseAfterRefund": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "accountNetChange": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      }
+    },
+    {
+      "id": "partial-refunds-cancel-earlier-and-redistribute-in-creation-order",
+      "kind": "postgres_refund_cancel_redistribution",
+      "principal": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000002",
+          "amount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000003",
+          "amount": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "12000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-0000-0000-000000000002",
+            "expenseReduction": {
+              "unscaled": "6000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          {
+            "refundId": "00000000-0000-0000-0000-000000000003",
+            "expenseReduction": {
+              "unscaled": "4000",
+              "scale": 2,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "2000",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          }
+        ],
+        "afterCancellingFirst": {
+          "refunded": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "netExpense": {
+            "unscaled": "4000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "excessAmount": {
+            "unscaled": "0",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "remainingReceiptExpenseReduction": {
+            "unscaled": "6000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "statIncome": {
+            "unscaled": "0",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "budgetExpense": {
+            "unscaled": "4000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "accountNetChange": {
+            "unscaled": "-4000",
+            "scale": 2,
+            "currency": "CNY"
+          }
+        }
+      }
+    },
+    {
+      "id": "fractional-scale-boundary",
+      "kind": "domain_calculation",
+      "principal": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000004",
+          "amount": {
+            "unscaled": "9999",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000005",
+          "amount": {
+            "unscaled": "2",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "10001",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "1",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "secondReceiptExpenseReduction": {
+          "unscaled": "1",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      }
+    },
+    {
+      "id": "checked-total-overflow",
+      "kind": "domain_overflow",
+      "principal": {
+        "unscaled": "9223372036854775807",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000006",
+          "amount": {
+            "unscaled": "9223372036854775807",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-000000000007",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "AMOUNT_OVERFLOW"
+    },
+    {
+      "id": "idempotent-preference-replay-does-not-advance-head-twice",
+      "kind": "postgres_preference_replay",
+      "command": {
+        "commandType": "preferences.update",
+        "schemaVersion": 1,
+        "aggregateType": "preferences",
+        "aggregateId": "$authenticatedOwnerId",
+        "baseRevision": 0,
+        "changes": {
+          "refundExcessAsIncome": true
+        }
+      },
+      "expected": {
+        "firstStatus": "APPLIED",
+        "replayStatus": "ALREADY_APPLIED",
+        "replayHeadSeqDelta": 0,
+        "financialEventDelta": 0,
+        "accountPostingDelta": 0
+      }
+    },
+    {
+      "id": "statistics-disabled-refund-excess-remains-excluded",
+      "kind": "postgres_statistics_disabled",
+      "principal": {
+        "unscaled": "10000",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000008",
+          "amount": {
+            "unscaled": "12000",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "recordFlags": {
+        "countInStatistics": false,
+        "countInBudget": true
+      },
+      "expected": {
+        "statIncomeWhenPreferenceOff": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "statIncomeWhenPreferenceOn": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "budgetExpenseAfterRefund": {
+          "unscaled": "0",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "accountNetChange": {
+          "unscaled": "2000",
+          "scale": 2,
+          "currency": "CNY"
+        }
+      }
+    },
+    {
+      "id": "bounded-independent-refunds-overflow-aggregate-income",
+      "kind": "postgres_aggregate_income_overflow",
+      "principal": {
+        "unscaled": "1",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000009",
+          "amount": {
+            "unscaled": "9223372036854775807",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-0000-0000-00000000000a",
+          "amount": {
+            "unscaled": "9223372036854775807",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "eachReceiptExcess": {
+          "unscaled": "9223372036854775806",
+          "scale": 2,
+          "currency": "CNY"
+        },
+        "aggregateIncomeError": "AMOUNT_OVERFLOW",
+        "rejectedToggleStatus": "REJECTED",
+        "revisionAfterReject": 0,
+        "headSeqDelta": 0,
+        "financialEventDelta": 0,
+        "accountPostingDelta": 0,
+        "newRefundWhileEnabled": {
+          "status": "REJECTED",
+          "error": "AMOUNT_OVERFLOW",
+          "refundCountDelta": 0,
+          "financialEventDelta": 0,
+          "accountPostingDelta": 0
+        }
+      }
+    }
+  ]
+}

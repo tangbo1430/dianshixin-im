@@ -1,0 +1,206 @@
+package com.qchm.xyz.bean;
+
+import android.content.SharedPreferences;
+import com.google.gson.Gson;
+import com.tencent.imsdk.BaseConstants;
+import com.qchm.xyz.TIMAppService;
+import com.qchm.xyz.utils.Constants;
+import java.io.Serializable;
+
+public class UserInfo implements Serializable {
+    private final static String PER_USER_MODEL = "per_user_model";
+
+    private static UserInfo sUserInfo;
+
+    private int sdkAppId;
+    private String zone;
+    private String phone;
+    private String token;
+    private String userId;
+    private String userSig;
+    private long userSigExpiresAt;
+    private long lastOnlineAuthAt;
+    private String imSessionOwnerHash;
+    private String name;
+    private String userToken;
+    private String avatar;
+    private boolean autoLogin;
+    private boolean debugLogin = false;
+    private int lastLoginCode = BaseConstants.ERR_SUCC;
+
+    public synchronized static UserInfo getInstance() {
+        if (sUserInfo == null) {
+            SharedPreferences shareInfo = TIMAppService.getAppContext().getSharedPreferences(Constants.USERINFO, 0);
+            String json = shareInfo.getString(PER_USER_MODEL, "");
+            sUserInfo = new Gson().fromJson(json, UserInfo.class);
+            if (sUserInfo == null) {
+                sUserInfo = new UserInfo();
+            }
+        }
+        return sUserInfo;
+    }
+
+    private UserInfo() {}
+
+    public void setUserInfo(UserInfo info) {
+        SharedPreferences shareInfo = TIMAppService.getAppContext().getSharedPreferences(Constants.USERINFO, 0);
+        SharedPreferences.Editor editor = shareInfo.edit();
+        editor.putString(PER_USER_MODEL, new Gson().toJson(info));
+        editor.commit();
+    }
+
+    public int getSdkAppId() {
+        return sdkAppId;
+    }
+
+    public void setSdkAppId(int sdkAppId) {
+        this.sdkAppId = sdkAppId;
+        setUserInfo(this);
+    }
+
+    public String getUserSig() {
+        return this.userSig;
+    }
+
+    public void setUserSig(String userSig) {
+        this.userSig = userSig;
+        setUserInfo(this);
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        setUserInfo(this);
+    }
+
+    public String getUserId() {
+        return this.userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+        setUserInfo(this);
+    }
+
+    public String getToken() {
+        return this.token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+        setUserInfo(this);
+    }
+
+    public String getZone() {
+        return this.zone;
+    }
+
+    public void setZone(String zone) {
+        this.zone = zone;
+        setUserInfo(this);
+    }
+
+    public String getPhone() {
+        return this.phone;
+    }
+
+    public void setPhone(String userPhone) {
+        this.phone = userPhone;
+        setUserInfo(this);
+    }
+
+    public Boolean isAutoLogin() {
+        return this.autoLogin;
+    }
+
+    public void setAutoLogin(boolean autoLogin) {
+        this.autoLogin = autoLogin;
+        setUserInfo(this);
+    }
+
+    public String getAvatar() {
+        return this.avatar;
+    }
+
+    public void setAvatar(String url) {
+        this.avatar = url;
+        setUserInfo(this);
+    }
+
+    public void setDebugLogin(boolean debugLogin) {
+        this.debugLogin = debugLogin;
+        setUserInfo(this);
+    }
+
+    public boolean isDebugLogin() {
+        return debugLogin;
+    }
+
+    public int getLastLoginCode() {
+        return lastLoginCode;
+    }
+
+    public void setLastLoginCode(int lastLoginCode) {
+        this.lastLoginCode = lastLoginCode;
+        setUserInfo(this);
+    }
+
+    public String getUserToken() {
+        return userToken;
+    }
+
+    public void setUserToken(String userToken) {
+        this.userToken = userToken;
+        setUserInfo(this);
+    }
+
+    public long getUserSigExpiresAt() {
+        return userSigExpiresAt;
+    }
+
+    public long getLastOnlineAuthAt() {
+        return lastOnlineAuthAt;
+    }
+
+    public String getImSessionOwner() {
+        return imSessionOwnerHash == null ? "" : imSessionOwnerHash;
+    }
+
+    public void setLastOnlineAuthAt(long lastOnlineAuthAt) {
+        this.lastOnlineAuthAt = lastOnlineAuthAt;
+        setUserInfo(this);
+    }
+
+    public void setImSession(int sdkAppId, String userId, String userSig, long expiresAt) {
+        setImSession(sdkAppId, userId, userSig, expiresAt, "");
+    }
+
+    public void setImSession(int sdkAppId, String userId, String userSig, long expiresAt, String ownerHash) {
+        this.sdkAppId = sdkAppId;
+        this.userId = userId;
+        this.userSig = userSig;
+        this.userSigExpiresAt = expiresAt;
+        this.imSessionOwnerHash = ownerHash == null ? "" : ownerHash;
+        setUserInfo(this);
+    }
+
+    public void cleanUserInfo() {
+        sdkAppId = 0;
+        zone = "";
+        userToken = "";
+        token = "";
+        userId = "";
+        userSig = "";
+        userSigExpiresAt = 0;
+        lastOnlineAuthAt = 0;
+        imSessionOwnerHash = "";
+        name = "";
+        avatar = "";
+        autoLogin = false;
+        lastLoginCode = BaseConstants.ERR_SUCC;
+        setUserInfo(this);
+    }
+}

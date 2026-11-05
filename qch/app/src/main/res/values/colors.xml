@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="colorCloudLight">#EE6B02</color>
+    <color name="colorCloudLively">#FF8E82</color>
+    <color name="colorCloudSerious">#FF8E82</color>
+    <color name="colorShade">#33000000</color>
+
+    <color name="tab_text_selected_color">#006EFF</color>
+    <color name="tab_text_normal_color">#888888</color>
+    <color name="colorCloudShallow">#84C1FF</color>
+
+    <color name="colorActivityBackground">#ffffff</color>
+    <color name="colorWhite">#ffffff</color>
+
+    <color name="btn_blue_standard_color">#338BFF</color>
+    <color name="item_split_color">#cccccc</color>
+
+    <color name="colorShallow">#9E9EA1</color>
+
+    <color name="demo_self_detail_icon_title_bg">#444444</color>
+
+    <color name="demo_title_bar_bg">#EBF0F6</color>
+    <color name="demo_navigate_bar_bg">#EBF0F6</color>
+    <color name="demo_popup_card_bg">#FFFFFF</color>
+    <color name="demo_popup_card_positive_normal_bg">#EE6B02</color>
+    <color name="demo_popup_card_positive_pressed_bg">#B9D7FF</color>
+    <color name="demo_popup_card_line_bg">#E4E5E9</color>
+
+    <color name="demo_profile_bg">#E6E9EB</color>
+    <color name="demo_partTranslucent">#39000000</color>
+    <color name="demo_slide_bar_hint_color">#CCCCCC</color>
+
+    <color name="demo_theme_select_light_color">#FFC0E1FF</color>
+    <color name="demo_theme_select_lively_color">#FFF38787</color>
+    <color name="demo_theme_select_serious_color">#FF3371CD</color>
+
+    <color name="security_warning_text_color">#A02800</color>
+    <color name="security_warning_report_color">#006EFF</color>
+
+    <color name="demo_community_page_navigate_bar_color">#FFFFFFFF</color>
+    <color name="demo_community_page_status_bar_color">#EBECF0</color>
+
+    <color name="demo_im_about_item_bg">#E7F2FF</color>
+    <color name="qch_purple">#7C35FF</color>
+    <color name="qch_purple_light">#9C63FF</color>
+    <color name="qch_purple_soft">#F5F0FF</color>
+    <color name="qch_page_bg">#F5F6F8</color>
+    <color name="qch_panel_bg">#FFFFFFFF</color>
+    <color name="qch_text_primary">#1D1D22</color>
+    <color name="qch_text_secondary">#8B8F99</color>
+    <color name="qch_divider">#ECEEF1</color>
+</resources>
+

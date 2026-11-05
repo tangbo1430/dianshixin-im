@@ -1,0 +1,43 @@
+{
+  "contractVersion": 1,
+  "endpoint": "POST /v1/me/deletion",
+  "request": {
+    "fields": ["actionToken", "confirmation"],
+    "confirmation": "DELETE",
+    "unknownFields": "reject"
+  },
+  "authorization": {
+    "actionTarget": { "type": "ACCOUNT_DELETE" },
+    "singleUse": true,
+    "recentReauthenticationRequired": true
+  },
+  "idempotency": {
+    "header": "Idempotency-Key",
+    "scope": "APP_SESSION + route + UUID key",
+    "digest": "server HMAC over normalized request",
+    "receiptRetentionDays": 90,
+    "receiptReplay": "only the same still-valid signed access token claims (owner, session, device and authVersion) used to create the deletion may read the matching digest receipt after that session is revoked"
+  },
+  "accepted": {
+    "status": 202,
+    "immediateEffects": [
+      "create a durable account tombstone outside financial dataset epochs",
+      "set app user status to DELETING and increment authVersion",
+      "revoke all user sessions",
+      "create a persistent deletion job"
+    ],
+    "onlineCleanupDeadlineHours": 24,
+    "infrastructureTombstoneRetentionMaximumDays": 30,
+    "unavailableAdapters": "leave their stage PENDING with a safe retryable error; never report purge completion"
+  },
+  "jobQuery": {
+    "endpoint": "GET /v1/jobs/{id}",
+    "ownerScoped": true,
+    "afterRevocation": "only the original unexpired signed access token, matching the job owner, session, device and authVersion, may read deletion progress"
+  },
+  "disasterRecovery": {
+    "authoritativeMarker": "account_deletion_tombstones",
+    "restoreRule": "reapply all imported, non-expired tombstones by owner ID before opening service traffic; only mark applied after status, session revocation and job evidence commit",
+    "externalImport": "restore tooling must provide an authenticated, integrity-checked tombstone manifest; absent or invalid manifest blocks traffic"
+  }
+}

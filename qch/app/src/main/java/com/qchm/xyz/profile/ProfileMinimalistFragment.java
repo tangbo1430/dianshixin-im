@@ -1,0 +1,90 @@
+package com.qchm.xyz.profile;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.qchm.xyz.R;
+import com.qchm.xyz.utils.ProfileUtil;
+import com.tencent.qcloud.tuicore.TUILogin;
+import com.tencent.qcloud.tuicore.interfaces.TUICallback;
+import com.tencent.qcloud.tuicore.util.ToastUtil;
+import com.tencent.qcloud.tuikit.timcommon.component.dialog.TUIKitDialog;
+
+public class ProfileMinimalistFragment extends Fragment {
+    private View mBaseView;
+    private ProfileMinamalistLayout mProfileLayout;
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        mBaseView = inflater.inflate(R.layout.minimalist_profile_fragment, container, false);
+        initView();
+        return mBaseView;
+    }
+
+    private void initView() {
+        mProfileLayout = mBaseView.findViewById(R.id.profile_view);
+        mProfileLayout.setOnClickListener(new OnClickListener() {
+            @Override
+            public void finishActivity() {
+                getActivity().finish();
+            }
+        });
+        mBaseView.findViewById(R.id.logout_btn).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new TUIKitDialog(getActivity())
+                    .builder()
+                    .setCancelable(true)
+                    .setCancelOutside(true)
+                    .setTitle(getString(R.string.logout_tip))
+                    .setDialogWidth(0.75f)
+                    .setPositiveButton(getString(com.tencent.qcloud.tuicore.R.string.sure),
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                TUILogin.logout(new TUICallback() {
+                                    @Override
+                                    public void onSuccess() {
+                                        ProfileUtil.onLogoutSuccess(getActivity());
+                                    }
+
+                                    @Override
+                                    public void onError(int code, String desc) {
+                                        ToastUtil.toastLongMessage("logout fail: " + code + "=" + desc);
+                                        ProfileUtil.onLogoutSuccess(getActivity());
+                                    }
+                                });
+                            }
+                        })
+                    .setNegativeButton(getString(com.tencent.qcloud.tuicore.R.string.cancel),
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {}
+                        })
+                    .show();
+            }
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mProfileLayout.initUI();
+    }
+
+    public void reloadData() {
+        if (mProfileLayout != null) {
+            mProfileLayout.loadSelfInfo();
+        }
+    }
+
+    public interface OnClickListener {
+        void finishActivity();
+    }
+}

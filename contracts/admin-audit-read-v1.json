@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "kind": "implemented_admin_audit_read_contract",
+  "method": "GET",
+  "path": "/admin/v1/audit",
+  "authentication": {
+    "credential": "Bearer opaque admin session",
+    "checksPerRequest": ["active session", "expiry", "idle timeout", "role version", "audit:read"],
+    "supportScope": "actor_type=ADMIN_STAFF AND actor_id=current_admin_staff_id, enforced in SQL"
+  },
+  "query": {
+    "cursor": {
+      "type": "string",
+      "optional": true,
+      "format": "base64url(Unix timestamp nanoseconds:UUID)",
+      "ordering": "created_at DESC, id DESC",
+      "meaning": "exclusive position after the last returned row"
+    },
+    "limit": {
+      "type": "integer",
+      "optional": true,
+      "default": 25,
+      "minimum": 1,
+      "maximum": 100
+    },
+    "action": {
+      "type": "string",
+      "optional": true,
+      "maxLength": 80,
+      "pattern": "ASCII letters, digits, dot, underscore, hyphen; exact match"
+    },
+    "targetType": {
+      "type": "string",
+      "optional": true,
+      "maxLength": 80,
+      "pattern": "ASCII letters, digits, dot, underscore, hyphen; exact match"
+    },
+    "from": {
+      "type": "string",
+      "optional": true,
+      "format": "YYYY-MM-DD",
+      "semantics": "inclusive UTC midnight"
+    },
+    "to": {
+      "type": "string",
+      "optional": true,
+      "format": "YYYY-MM-DD",
+      "semantics": "inclusive UTC calendar date, implemented as exclusive midnight of the next day"
+    },
+    "validation": "Unknown, duplicate, malformed, or invalid fields and reversed date ranges are rejected."
+  },
+  "success": {
+    "envelope": {
+      "data": {
+        "items": "AuditItem[]",
+        "nextCursor": "string|null",
+        "hasMore": "boolean",
+        "scope": "own|all"
+      },
+      "requestId": "UUID"
+    },
+    "auditItem": {
+      "id": "UUID",
+      "actorType": "string",
+      "actorId": "UUID",
+      "action": "string",
+      "targetType": "string",
+      "targetId": "UUID",
+      "createdAt": "UTC RFC3339 timestamp",
+      "reason": "string|null; raw reason only for recognized ADMIN_STAFF event names",
+      "requestId": "UUID",
+      "result": "SUCCESS for the explicitly recognized transactional ADMIN_STAFF emitters; otherwise null",
+      "before": "object|null; action-specific allowlisted scalar difference",
+      "after": "object|null; action-specific allowlisted scalar difference"
+    }
+  },
+  "safeDifferenceAllowlist": {
+    "users.status": {
+      "status": ["ACTIVE", "DISABLED"],
+      "authVersion": "positive integer"
+    },
+    "sessions.revoke-all": {
+      "authVersion": "positive integer",
+      "revokedSessions": "nonnegative integer",
+      "opId": "non-nil UUID",
+      "adminSessionId": "non-nil UUID",
+      "roleVersion": "positive integer"
+    },
+    "admin.reauth": {
+      "opId": "non-nil UUID"
+    },
+    "other actions": "No before/after data is returned."
+  },
+  "privacy": [
+    "No raw JSON passthrough; unknown fields, nested values and wrong scalar types are dropped.",
+    "Unknown event reasons are null. No joins to user PII or financial tables occur.",
+    "Malformed or legacy JSON yields null safe differences without failing the page.",
+    "Result is SUCCESS only for known admin.login, admin.logout, admin.reauth, users.status, and sessions.revoke-all events that are written in the same transaction as their successful action; all other event results remain null."
+  ],
+  "not_implemented": [
+    "POST /admin/v1/audit/exports",
+    "export artifact authorization and expiry",
+    "independent result/history schema or historical result backfill for unknown event kinds"
+  ]
+}

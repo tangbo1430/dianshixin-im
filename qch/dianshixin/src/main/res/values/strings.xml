@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">店时信</string>
+    <string name="tab_ledger">账本</string>
+    <string name="tab_statistics">统计</string>
+    <string name="tab_assets">资产</string>
+    <string name="tab_saving">存钱</string>
+    <string name="empty_ledger">暂无账单</string>
+    <string name="empty_statistics">暂无统计数据</string>
+    <string name="empty_assets">暂无资产账户</string>
+    <string name="empty_saving">暂无存钱计划</string>
+</resources>

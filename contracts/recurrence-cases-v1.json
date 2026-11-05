@@ -1,0 +1,95 @@
+{
+  "fixture": "recurrence-cases",
+  "version": 1,
+  "status": "IMPLEMENTED_BACKEND_REFERENCE_ONLY_NOT_ANDROID_OR_DEVICE_ACCEPTANCE",
+  "scope": "Deterministic recurrence calendar, stable slot ordinal and version-policy expectations shared with the future Android client. Nothing here is a claim about the original APK, U03, Android Room/WorkManager, or full M3.",
+  "languageStatus": {
+    "rustBackend": "implemented; calendar vectors asserted by unit tests",
+    "android": "not implemented in this task; vectors are a read-only reference for later Room/WorkManager work"
+  },
+  "rules": {
+    "logicalSlot": "stable monotonic nonnegative plan ordinal; independent of ruleRevision, device and retry",
+    "planAnchor": "immutable startLocalDateTime supplies the clock time for every occurrence",
+    "monthEndClamp": "a selector past the month length clamps to the last day of that month and never moves the anchor",
+    "calendarDedup": "within one calendar period two selectors that clamp to the same actual date produce one occurrence",
+    "endInclusive": "endAt is inclusive; the first occurrence strictly after endAt ends the plan",
+    "countOrEnd": "maxCount and endAt stop the plan on the first boundary reached",
+    "timezoneResolution": "resolved by PostgreSQL 17 timestamp-without-time-zone AT TIME ZONE: fall-back ambiguity takes the offset after the transition, spring-forward gap takes the offset before the transition"
+  },
+  "cases": [
+    {
+      "id": "monthly-jan31-anchor-clamps-february-and-recovers-march",
+      "frequency": "MONTHLY",
+      "interval": 1,
+      "weekDays": [],
+      "monthDays": [],
+      "anchorLocalDateTime": "2025-01-31T09:30:00",
+      "expectedLocalDateTimes": [
+        "2025-01-31T09:30:00",
+        "2025-02-28T09:30:00",
+        "2025-03-31T09:30:00"
+      ]
+    },
+    {
+      "id": "monthly-leap-february-29-clamp",
+      "frequency": "MONTHLY",
+      "interval": 1,
+      "weekDays": [],
+      "monthDays": [],
+      "anchorLocalDateTime": "2024-01-31T07:15:00",
+      "expectedLocalDateTimes": [
+        "2024-01-31T07:15:00",
+        "2024-02-29T07:15:00",
+        "2024-03-31T07:15:00"
+      ]
+    },
+    {
+      "id": "month-days-30-and-31-dedup-when-both-clamp-to-february-end",
+      "frequency": "MONTHLY",
+      "interval": 1,
+      "weekDays": [],
+      "monthDays": [30, 31],
+      "anchorLocalDateTime": "2024-01-31T07:15:00",
+      "expectedLocalDateTimes": [
+        "2024-02-29T07:15:00",
+        "2024-03-30T07:15:00",
+        "2024-03-31T07:15:00"
+      ]
+    },
+    {
+      "id": "two-weekly-interval-honours-sorted-week-day-selectors",
+      "frequency": "WEEKLY",
+      "interval": 2,
+      "weekDays": [1, 5],
+      "monthDays": [],
+      "anchorLocalDateTime": "2025-01-01T08:00:00",
+      "expectedLocalDateTimes": ["2025-01-03T08:00:00"]
+    },
+    {
+      "id": "yearly-leap-selector-clamps-to-february-28",
+      "frequency": "YEARLY",
+      "interval": 1,
+      "weekDays": [],
+      "monthDays": [29],
+      "anchorLocalDateTime": "2024-02-01T12:00:00",
+      "expectedLocalDateTimes": [
+        "2024-02-29T12:00:00",
+        "2025-02-28T12:00:00"
+      ]
+    }
+  ],
+  "timezoneVectors": [
+    {
+      "id": "america-new-york-fall-back-ambiguity-takes-post-transition-offset",
+      "timezone": "America/New_York",
+      "localDateTime": "2018-11-04T01:30:00",
+      "expectedUtc": "2018-11-04T06:30:00Z"
+    },
+    {
+      "id": "america-new-york-spring-forward-gap-takes-pre-transition-offset",
+      "timezone": "America/New_York",
+      "localDateTime": "2018-03-11T02:30:00",
+      "expectedUtc": "2018-03-11T07:30:00Z"
+    }
+  ]
+}

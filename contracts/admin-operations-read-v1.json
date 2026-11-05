@@ -1,0 +1,164 @@
+{
+  "contract": "admin-operations-read-v1",
+  "version": 1,
+  "transport": {
+    "authorization": "Bearer admin session; actor and permission rechecked for every request",
+    "success": "{data,requestId}",
+    "cacheControl": "no-store",
+    "timestamp": "UTC RFC3339",
+    "queryRules": "Unknown and repeated query keys are rejected; limit is 1..100, default 25; ownerId and deviceId must be non-nil UUIDs."
+  },
+  "pagination": {
+    "response": {
+      "items": "array",
+      "nextCursor": "opaque string or null",
+      "hasMore": "boolean"
+    },
+    "ordering": "Stable descending timestamp plus UUID/type tie breakers; cursor is exclusive.",
+    "consistency": "Live pagination; no cross-request snapshot guarantee."
+  },
+  "routes": {
+    "GET /admin/v1/sync-diagnostics": {
+      "permission": "sync:diagnose",
+      "query": ["ownerId", "deviceId", "cursor", "limit"],
+      "item": {
+        "ownerId": "uuid",
+        "deviceId": "uuid",
+        "deviceEpoch": "uuid",
+        "activeEpoch": "uuid",
+        "ackSeq": "nonnegative safe JSON integer (0..9007199254740991) or null when device epoch is stale",
+        "headSeq": "nonnegative safe JSON integer (0..9007199254740991) or null when device epoch is stale",
+        "lag": "nonnegative safe JSON integer (0..9007199254740991) or null when device epoch is stale",
+        "openConflictCount": "nonnegative safe JSON integer (0..9007199254740991)",
+        "lastSeenAt": "UTC timestamp",
+        "lastSuccessAt": null,
+        "lastErrorCode": null
+      },
+      "nullSemantics": {
+        "lastSuccessAt": "unsupported: sync_devices persists last_seen_at but no last-success timestamp",
+        "lastErrorCode": "unsupported: no durable per-device sync error record exists",
+        "epochMismatch": "ackSeq, headSeq, and lag are null when deviceEpoch differs from activeEpoch"
+      },
+      "unsupportedFilters": ["requestId: no durable sync request diagnostic index exists"],
+      "sensitiveExcluded": ["command payload", "conflict body", "email", "device name"]
+    },
+    "GET /admin/v1/backups": {
+      "permission": "backups:read",
+      "query": ["ownerId", "state", "cursor", "limit"],
+      "item": {
+        "id": "uuid",
+        "ownerId": "uuid",
+        "epoch": "uuid",
+        "type": "NEW_DEVICE | CURSOR_EXPIRED | SNAPSHOT_REQUIRED",
+        "state": "QUEUED | CAPTURING | VERIFYING | READY | FAILED | RUNNING | COMPLETED | BLOCKED | CANCELLED",
+        "attempts": "nonnegative safe JSON integer (database INTEGER)",
+        "capturedSeq": "nonnegative safe JSON integer or null",
+        "schemaVersion": "integer or null",
+        "storedBytes": "nonnegative safe JSON integer or null",
+        "plainBytes": "nonnegative safe JSON integer or null",
+        "errorCode": "allowlisted safe enum or null",
+        "createdAt": "UTC timestamp",
+        "updatedAt": "UTC timestamp",
+        "expiresAt": "UTC timestamp"
+      },
+      "nullSemantics": "Size, capture sequence, schema, and error are null until a persistent source has a value; unknown failure strings map to null. protectedUntil is unsupported because no separate protection timestamp is stored."
+    },
+    "GET /admin/v1/backups/{id}": {
+      "permission": "backups:read",
+      "response": "same item as backup list",
+      "unknown": "404 NOT_FOUND"
+    },
+    "GET /admin/v1/restores": {
+      "permission": "backups:read",
+      "query": ["cursor", "limit", "ownerId", "state"],
+      "itemFields": {
+        "id": "uuid",
+        "state": ["QUEUED", "PROTECTING", "STAGING", "VALIDATING", "COMMITTING", "COMMITTED", "FAILED", "CANCELLED"],
+        "progress": "integer 0..100",
+        "attempts": "nonnegative safe JSON integer",
+        "backupId": "source snapshot uuid",
+        "errorCode": "allowlisted safe enum or null",
+        "createdAt": "UTC timestamp",
+        "updatedAt": "UTC timestamp",
+        "finishedAt": "UTC timestamp or null",
+        "ownerId": "uuid; omitted from support projection",
+        "expectedEpoch": "uuid; omitted from support projection",
+        "expectedHeadSeq": "nonnegative safe JSON integer; omitted from support projection",
+        "targetEpoch": "uuid; omitted from support projection"
+      },
+      "supportProjection": ["id", "state", "progress", "attempts", "backupId", "errorCode", "createdAt", "updatedAt", "finishedAt"],
+      "response": "paginated restore-job items"
+    },
+    "GET /admin/v1/restores/{id}": {
+      "permission": "backups:read",
+      "response": "same restore item as list",
+      "unknown": "404 NOT_FOUND"
+    },
+    "GET /admin/v1/jobs": {
+      "permission": "jobs:read",
+      "query": ["ownerId", "state", "kind", "cursor", "limit"],
+      "kinds": {
+        "SNAPSHOT": "sync_snapshot_jobs",
+        "RECURRENCE": "recurrence_jobs"
+      },
+      "id": "kind-prefixed string snapshot_<uuid> or recurrence_<uuid>",
+      "itemFields": {
+        "ownerId": "uuid",
+        "epoch": "uuid",
+        "attempts": "nonnegative safe JSON integer; recurrence is schema-bounded to 0..8",
+        "scheduledAt": "UTC timestamp or null",
+        "leaseUntil": "UTC timestamp or null",
+        "errorCode": "allowlisted safe enum or null",
+        "durationSeconds": "completed latest recurrence attempt duration as a nonnegative safe JSON integer, or null when not persisted",
+        "actionVersion": "positive integer for SNAPSHOT; null for RECURRENCE. The database trigger increments it when state, attempts, lease, failure, backup lifecycle, protection, or object identity changes."
+      },
+      "supportProjection": ["id", "kind", "state", "createdAt", "updatedAt"],
+      "actions": {
+        "POST /admin/v1/jobs/{id}/retry": {
+          "permission": "jobs:retry",
+          "header": "Idempotency-Key UUID equal to body.opId",
+          "body": {"opId": "UUID", "expectedVersion": "positive actionVersion compare-and-set value", "reason": "10..500 characters"},
+          "supported": "SNAPSHOT only; FAILED, unexpired, non-protected jobs with an allowlisted retryable failure and no lease reset to QUEUED; MANUAL/DAILY jobs are eligible only before an object is published.",
+          "rejected": ["RECURRENCE", "RESTORE", "READY", "COMMITTED", "DONE", "protected or non-active backup lifecycle", "published object", "unsupported failure", "stale epoch", "inactive owner"]
+        },
+        "POST /admin/v1/jobs/{id}/cancel": {
+          "permission": "jobs:cancel",
+          "header": "Idempotency-Key UUID equal to body.opId",
+          "body": {"opId": "UUID", "expectedVersion": "positive actionVersion compare-and-set value", "reason": "10..500 characters"},
+          "supported": "SNAPSHOT only; never-claimed QUEUED jobs become terminal CANCELLED.",
+          "rejected": ["RECURRENCE", "RESTORE", "leased or previously executed", "READY", "COMMITTED", "DONE", "protected or non-active backup lifecycle", "published object", "stale epoch", "inactive owner"]
+        },
+        "receipt": "Encrypted session and roleVersion scoped replay receipt binds route, job ID, operation ID, expectedVersion, and reason. Mutation, receipt, and audit commit atomically.",
+        "audit": "Projects action, reason, state and actionVersion only; excludes snapshot contents and credentials."
+      }
+    },
+    "GET /admin/v1/jobs/{id}": {
+      "permission": "jobs:read",
+      "response": "same item as job list",
+      "unknown": "404 NOT_FOUND"
+    },
+    "GET /admin/v1/storage-summary": {
+      "permission": "storage:read",
+      "query": [],
+      "item": {
+        "snapshotStoredBytes": "exact nonnegative safe JSON integer sum of sync_snapshot_jobs.stored_bytes for READY snapshot jobs, or null when none; snapshot bytes are reported separately from attachment object metrics",
+        "readySnapshotCount": "nonnegative safe JSON integer",
+        "pendingSnapshotCount": "nonnegative safe JSON integer",
+        "failedSnapshotCount": "nonnegative safe JSON integer",
+        "attachmentStoredBytes": "exact nonnegative safe JSON integer sum of bytes for non-DELETED storage_objects, or null when none; excludes sync_snapshot_jobs stored_bytes",
+        "attachmentObjectCount": "nonnegative safe JSON integer count of non-DELETED storage_objects",
+        "unreferencedObjectCount": "nonnegative safe JSON integer count of non-DELETED storage_objects with no attachment_references through attachments",
+        "pendingGcCount": "nonnegative safe JSON integer count of non-DELETED storage_objects in GC_PENDING or GC_DELETING, or with a persisted attachment_gc_leases row",
+        "unsupportedFields": ["bucketCount", "objectStatusCounts"]
+      },
+      "scope": "Snapshot metrics aggregate sync_snapshot_jobs only. Attachment byte and object metrics aggregate non-DELETED storage_objects only; attachment_references/attachment_gc_leases refine their counts. Snapshot object_id references and snapshot stored_bytes are not joined or added to attachment metrics. Unreferenced means no attachment_references row for an attachment backed by the object; pending GC is a distinct object count, not lease attempt count.",
+      "integerPrecision": "Every emitted integer is checked to be a nonnegative JavaScript safe integer (0..9007199254740991) before JSON projection. If a persisted value or count exceeds this range, the endpoint returns the existing AUTH_UNAVAILABLE error; it never emits a rounded Number.",
+      "overflow": "PostgreSQL SUM(bigint) is explicitly cast to BIGINT. A sum outside signed BIGINT range raises numeric_value_out_of_range and maps to AUTH_UNAVAILABLE; a sum within BIGINT but above the JavaScript safe-integer range is rejected by the projection check with AUTH_UNAVAILABLE. Values are never clamped or rounded."
+    }
+  },
+  "security": {
+    "neverProject": ["financial content", "command payload", "user note", "raw error text", "object key", "bucket", "snapshot body", "download URL", "secret", "credential"],
+    "errorCodes": "Only known application-owned enums are returned; all other values become null.",
+    "authorization": "Each route validates the actor session and the route-specific permission before data access."
+  }
+}

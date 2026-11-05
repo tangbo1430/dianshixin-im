@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "money": {"unscaled": "120000", "scale": 2, "currency": "CNY"},
+  "interest": {"unscaled": "1200", "scale": 2, "currency": "CNY"},
+  "capacity": [
+    {"limit": "1000000", "effect": "0", "expected": "1000000"},
+    {"limit": "1000000", "effect": "20000", "expected": "1020000"},
+    {"limit": "1000000", "effect": "200000", "expected": "1200000"},
+    {"limit": "100000", "effect": "-120000", "expected": "-20000"}
+  ],
+  "termTail": ["3333", "3333", "3334"],
+  "termStatement": "10100"
+}

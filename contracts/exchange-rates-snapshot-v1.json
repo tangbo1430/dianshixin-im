@@ -1,0 +1,38 @@
+{
+  "contract": "exchange-rates-snapshot-v1",
+  "description": "Synthetic example for the controlled provider snapshot adapter; these values are not market quotes.",
+  "request": {
+    "method": "GET",
+    "path": "/v1/exchange-rates?base=CNY&symbols[]=USD&symbols[]=EUR",
+    "authentication": "public"
+  },
+  "snapshotFileExample": {
+    "base": "CNY",
+    "provider": "example-adapter",
+    "asOf": "2026-10-19T12:00:00Z",
+    "rates": {
+      "EUR": "7.500000",
+      "USD": "7.000000"
+    }
+  },
+  "responseExample": {
+    "data": {
+      "base": "CNY",
+      "rates": {
+        "EUR": "7.500000",
+        "USD": "7.000000"
+      },
+      "asOf": "2026-10-19T12:00:00Z",
+      "provider": "example-adapter",
+      "stale": false
+    },
+    "requestId": "00000000-0000-4000-8000-000000000001"
+  },
+  "unavailable": {
+    "status": 503,
+    "code": "EXCHANGE_RATES_UNAVAILABLE",
+    "when": "No configured snapshot and no valid in-memory last-good snapshot are available."
+  },
+  "stale": "A valid last-good snapshot is returned with stale=true after its configured maximum age or when its asOf timestamp is more than five minutes in the future.",
+  "note": "The example numbers and provider are synthetic and must never be presented as market data."
+}

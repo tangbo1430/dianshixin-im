@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "dailyTime": "03:00",
+  "zoneId": "UTC",
+  "dailyRetention": 30,
+  "manualRetention": 10,
+  "version": 1,
+  "updatedAt": "2026-10-19T10:00:00.000Z"
+}

@@ -1,0 +1,877 @@
+{
+  "schemaVersion": 1,
+  "policy": "D-basic-ledger-v1",
+  "specification": "../docs/native-app/03-domain-and-calculations.md",
+  "acceptance": "../docs/native-app/08-plan-and-acceptance.md",
+  "cases": [
+    {
+      "id": "T01",
+      "description": "A 支出100，收入200",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": true,
+          "countInBudget": true
+        },
+        {
+          "kind": "INCOME",
+          "amount": { "unscaled": "20000", "scale": 2, "currency": "CNY" },
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "20000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": true
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "110000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "direction": "INCOME",
+          "amount": { "unscaled": "20000", "scale": 2, "currency": "CNY" }
+        }
+      ],
+      "expectedBudget": [
+        { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "T02",
+      "description": "转账本金不计收支或预算",
+      "records": [
+        {
+          "kind": "TRANSFER",
+          "from": {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "to": {
+            "accountId": "00000000-0000-0000-0000-000000000002",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "fee": null,
+          "bonus": null
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "90000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "60000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [],
+      "expectedBudget": []
+    },
+    {
+      "id": "T03",
+      "description": "转账本金100、费用2、优惠1",
+      "records": [
+        {
+          "kind": "TRANSFER",
+          "from": {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "to": {
+            "accountId": "00000000-0000-0000-0000-000000000002",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "fee": {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "200", "scale": 2, "currency": "CNY" }
+          },
+          "bonus": {
+            "accountId": "00000000-0000-0000-0000-000000000002",
+            "amount": { "unscaled": "100", "scale": 2, "currency": "CNY" }
+          }
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "89800", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "60100", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "200", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "direction": "INCOME",
+          "amount": { "unscaled": "100", "scale": 2, "currency": "CNY" }
+        }
+      ],
+      "expectedBudget": [
+        { "unscaled": "200", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "T04",
+      "description": "消费100按60/40分摊，只统计一次",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "6000", "scale": 2, "currency": "CNY" }
+            },
+            {
+              "accountId": "00000000-0000-0000-0000-000000000002",
+              "amount": { "unscaled": "4000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": true,
+          "countInBudget": true
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "94000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "46000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        }
+      ],
+      "expectedBudget": [
+        { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "T05",
+      "description": "不计收支仍扣账户且计预算",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": false,
+          "countInBudget": true
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "90000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [],
+      "expectedBudget": [
+        { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "T07",
+      "description": "跨币种两端保存实际金额：70 CNY → 10 USD",
+      "records": [
+        {
+          "kind": "TRANSFER",
+          "from": {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "7000", "scale": 2, "currency": "CNY" }
+          },
+          "to": {
+            "accountId": "00000000-0000-0000-0000-000000000003",
+            "amount": { "unscaled": "1000", "scale": 2, "currency": "USD" }
+          },
+          "fee": null,
+          "bonus": null
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "93000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "11000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [],
+      "expectedBudget": []
+    },
+    {
+      "id": "T08",
+      "description": "支出组合分摊分别保存账户实际金额与记录币种金额",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [
+            { "accountId": "00000000-0000-0000-0000-000000000001", "amount": { "unscaled": "4000", "scale": 2, "currency": "CNY" } },
+            { "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "300", "scale": 2, "currency": "USD" }, "recordCurrencyAmount": { "unscaled": "6000", "scale": 2, "currency": "CNY" } }
+          ],
+          "countInStatistics": true,
+          "countInBudget": true
+        }
+      ],
+      "expectedBalances": [
+        { "accountId": "00000000-0000-0000-0000-000000000001", "amount": { "unscaled": "96000", "scale": 2, "currency": "CNY" } },
+        { "accountId": "00000000-0000-0000-0000-000000000002", "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" } },
+        { "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "9700", "scale": 2, "currency": "USD" } }
+      ],
+      "expectedStatistics": [
+        { "direction": "EXPENSE", "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" } }
+      ],
+      "expectedBudget": [
+        { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "T09",
+      "description": "优惠后按记录币种金额精确分摊，账户按显式实际金额记账",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": { "unscaled": "1000", "scale": 2, "currency": "CNY" },
+          "allocations": [
+            { "accountId": "00000000-0000-0000-0000-000000000001", "amount": { "unscaled": "3000", "scale": 2, "currency": "CNY" } },
+            { "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "450", "scale": 2, "currency": "USD" }, "recordCurrencyAmount": { "unscaled": "6000", "scale": 2, "currency": "CNY" } }
+          ],
+          "countInStatistics": true,
+          "countInBudget": true
+        }
+      ],
+      "expectedBalances": [
+        { "accountId": "00000000-0000-0000-0000-000000000001", "amount": { "unscaled": "97000", "scale": 2, "currency": "CNY" } },
+        { "accountId": "00000000-0000-0000-0000-000000000002", "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" } },
+        { "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "9550", "scale": 2, "currency": "USD" } }
+      ],
+      "expectedStatistics": [
+        { "direction": "EXPENSE", "amount": { "unscaled": "9000", "scale": 2, "currency": "CNY" } }
+      ],
+      "expectedBudget": [
+        { "unscaled": "9000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "D-DISCOUNT",
+      "description": "原价100优惠10，实付90；不产生优惠收入",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": { "unscaled": "1000", "scale": 2, "currency": "CNY" },
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "9000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": true,
+          "countInBudget": true
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "91000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "9000", "scale": 2, "currency": "CNY" }
+        }
+      ],
+      "expectedBudget": [
+        { "unscaled": "9000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "D-NO-ACCOUNT",
+      "description": "无账户账单保留统计预算，不生成资金分录",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [],
+          "countInStatistics": true,
+          "countInBudget": true
+        },
+        {
+          "kind": "INCOME",
+          "amount": { "unscaled": "20000", "scale": 2, "currency": "CNY" },
+          "allocations": [],
+          "countInStatistics": true
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "100000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "direction": "INCOME",
+          "amount": { "unscaled": "20000", "scale": 2, "currency": "CNY" }
+        }
+      ],
+      "expectedBudget": [
+        { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+      ]
+    },
+    {
+      "id": "D-NO-BUDGET",
+      "description": "不计预算仍扣账户且计收支",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": true,
+          "countInBudget": false
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "90000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        }
+      ],
+      "expectedBudget": []
+    },
+    {
+      "id": "D-NO-CONTRIBUTIONS",
+      "description": "两个统计开关均关闭仍扣账户",
+      "records": [
+        {
+          "kind": "EXPENSE",
+          "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "discount": null,
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": false,
+          "countInBudget": false
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "90000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [],
+      "expectedBudget": []
+    },
+    {
+      "id": "D-INCOME-EXCLUDED",
+      "description": "收入可独立排除统计，不产生预算",
+      "records": [
+        {
+          "kind": "INCOME",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+          "allocations": [
+            {
+              "accountId": "00000000-0000-0000-0000-000000000001",
+              "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+            }
+          ],
+          "countInStatistics": false
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "110000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [],
+      "expectedBudget": []
+    },
+    {
+      "id": "D-THIRD-ACCOUNT-FEE",
+      "description": "费用使用独立 USD 账户，不混合币种统计",
+      "records": [
+        {
+          "kind": "TRANSFER",
+          "from": {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "to": {
+            "accountId": "00000000-0000-0000-0000-000000000002",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "fee": {
+            "accountId": "00000000-0000-0000-0000-000000000003",
+            "amount": { "unscaled": "100", "scale": 2, "currency": "USD" }
+          },
+          "bonus": null
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "90000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "60000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "9900", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [
+        {
+          "direction": "EXPENSE",
+          "amount": { "unscaled": "100", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedBudget": [
+        { "unscaled": "100", "scale": 2, "currency": "USD" }
+      ]
+    },
+    {
+      "id": "D-MIXED-SCALE",
+      "description": "相同币种不同scale的分摊和本金按实际值守恒",
+      "records": [
+        {
+          "kind": "TRANSFER",
+          "from": {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "100", "scale": 0, "currency": "CNY" }
+          },
+          "to": {
+            "accountId": "00000000-0000-0000-0000-000000000002",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+          },
+          "fee": null,
+          "bonus": null
+        }
+      ],
+      "expectedBalances": [
+        {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "90000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "60000", "scale": 2, "currency": "CNY" }
+        },
+        {
+          "accountId": "00000000-0000-0000-0000-000000000003",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+        }
+      ],
+      "expectedStatistics": [],
+      "expectedBudget": []
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "zero-expense",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "0", "scale": 2, "currency": "CNY" },
+        "discount": null,
+        "allocations": [],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "negative-income",
+      "record": {
+        "kind": "INCOME",
+        "amount": { "unscaled": "-1", "scale": 2, "currency": "CNY" },
+        "allocations": [],
+        "countInStatistics": true
+      },
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "split-short",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": null,
+        "allocations": [
+          {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "9900", "scale": 2, "currency": "CNY" }
+          }
+        ],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "split-excess",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": null,
+        "allocations": [
+          {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "10001", "scale": 2, "currency": "CNY" }
+          }
+        ],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "split-currency",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": null,
+        "allocations": [
+          {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+          }
+        ],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "split-zero",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": null,
+        "allocations": [
+          {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "0", "scale": 2, "currency": "CNY" }
+          }
+        ],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "discount-excess",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": { "unscaled": "10001", "scale": 2, "currency": "CNY" },
+        "allocations": [],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "discount-negative",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": { "unscaled": "-1", "scale": 2, "currency": "CNY" },
+        "allocations": [],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "discount-currency",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" },
+        "discount": { "unscaled": "1", "scale": 2, "currency": "USD" },
+        "allocations": [],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "same-account-transfer",
+      "record": {
+        "kind": "TRANSFER",
+        "from": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "to": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "fee": null,
+        "bonus": null
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "unbalanced-transfer",
+      "record": {
+        "kind": "TRANSFER",
+        "from": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "to": {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "9900", "scale": 2, "currency": "CNY" }
+        },
+        "fee": null,
+        "bonus": null
+      },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "zero-transfer",
+      "record": {
+        "kind": "TRANSFER",
+        "from": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "0", "scale": 2, "currency": "CNY" }
+        },
+        "to": {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "fee": null,
+        "bonus": null
+      },
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "negative-fee",
+      "record": {
+        "kind": "TRANSFER",
+        "from": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "to": {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "fee": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "-1", "scale": 2, "currency": "CNY" }
+        },
+        "bonus": null
+      },
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "zero-bonus",
+      "record": {
+        "kind": "TRANSFER",
+        "from": {
+          "accountId": "00000000-0000-0000-0000-000000000001",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "to": {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }
+        },
+        "fee": null,
+        "bonus": {
+          "accountId": "00000000-0000-0000-0000-000000000002",
+          "amount": { "unscaled": "0", "scale": 2, "currency": "CNY" }
+        }
+      },
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "split-overflow",
+      "record": {
+        "kind": "EXPENSE",
+        "gross": { "unscaled": "9223372036854775807", "scale": 0, "currency": "CNY" },
+        "discount": null,
+        "allocations": [
+          {
+            "accountId": "00000000-0000-0000-0000-000000000001",
+            "amount": { "unscaled": "9223372036854775807", "scale": 0, "currency": "CNY" }
+          },
+          {
+            "accountId": "00000000-0000-0000-0000-000000000002",
+            "amount": { "unscaled": "1", "scale": 0, "currency": "CNY" }
+          }
+        ],
+        "countInStatistics": true,
+        "countInBudget": true
+      },
+      "expectedError": "AMOUNT_OVERFLOW"
+    },
+    {
+      "id": "XFX02-record-currency-split-sum-mismatch",
+      "record": { "kind": "EXPENSE", "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" }, "discount": null, "allocations": [{ "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "300", "scale": 2, "currency": "USD" }, "recordCurrencyAmount": { "unscaled": "5000", "scale": 2, "currency": "CNY" } }], "countInStatistics": true, "countInBudget": true },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "XFX03-same-currency-explicit-fx-rejected",
+      "record": { "kind": "EXPENSE", "gross": { "unscaled": "10000", "scale": 2, "currency": "CNY" }, "discount": null, "allocations": [{ "accountId": "00000000-0000-0000-0000-000000000001", "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }, "recordCurrencyAmount": { "unscaled": "10000", "scale": 2, "currency": "CNY" } }], "countInStatistics": true, "countInBudget": true },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "XFX04-income-cross-currency-rejected",
+      "record": { "kind": "INCOME", "amount": { "unscaled": "10000", "scale": 2, "currency": "CNY" }, "allocations": [{ "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "300", "scale": 2, "currency": "USD" }, "recordCurrencyAmount": { "unscaled": "10000", "scale": 2, "currency": "CNY" } }], "countInStatistics": true },
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "XFX05-rate-rounds-to-zero-rejected",
+      "record": { "kind": "EXPENSE", "gross": { "unscaled": "9223372036854775807", "scale": 6, "currency": "CNY" }, "discount": null, "allocations": [{ "accountId": "00000000-0000-0000-0000-000000000003", "amount": { "unscaled": "1", "scale": 6, "currency": "USD" }, "recordCurrencyAmount": { "unscaled": "9223372036854775807", "scale": 6, "currency": "CNY" } }], "countInStatistics": true, "countInBudget": true },
+      "expectedError": "INVALID_REQUEST"
+    }
+  ],
+  "openingBalances": [
+    {
+      "accountId": "00000000-0000-0000-0000-000000000001",
+      "amount": { "unscaled": "100000", "scale": 2, "currency": "CNY" }
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000002",
+      "amount": { "unscaled": "50000", "scale": 2, "currency": "CNY" }
+    },
+    {
+      "accountId": "00000000-0000-0000-0000-000000000003",
+      "amount": { "unscaled": "10000", "scale": 2, "currency": "USD" }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "endpoints": [
+    {
+      "method": "POST",
+      "path": "/v1/category-shares",
+      "authentication": "Bearer + X-Device-Id",
+      "headers": ["Idempotency-Key: UUID"],
+      "request": {
+        "epoch": "UUID active dataset epoch",
+        "ledgerId": "UUID owned ledger",
+        "direction": "EXPENSE | INCOME",
+        "categoryIds": "1..100 unique owned category UUIDs, including each selected child parent",
+        "expiresIn": "seconds, 300..7776000"
+      },
+      "response": {
+        "shareId": "UUID",
+        "token": "256-bit random opaque hex token (returned once; stored as SHA-256)",
+        "sharePath": "/v1/category-shares/{token}",
+        "expiresAt": "RFC3339 UTC"
+      },
+      "limits": "50 active shares per owner; request <=64KiB; owner and active source epoch checked; Idempotency-Key response receipt encrypted for 24 hours"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/category-shares/{token}",
+      "authentication": "Public",
+      "response": {
+        "categories": "category configuration whitelist: sourceId, direction, parentSourceId, name, iconRef, color, sortOrder, excludeBudget",
+        "expiresAt": "RFC3339 UTC"
+      },
+      "errors": {"404": "Unknown token", "410": "Expired or revoked token, or source dataset epoch changed", "429": "Public peer/token rate limit"},
+      "headers": ["Cache-Control: no-store"]
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/category-shares/{id}",
+      "authentication": "Bearer + X-Device-Id",
+      "headers": ["Idempotency-Key: UUID"],
+      "response": "204",
+      "ownership": "Owner only; cross-owner IDs return 404; same key and request digest replay safely"
+    }
+  ],
+  "iconRef": "Current Android category assets and initialized category rows define no iconRef resource identifiers. This version accepts only null and rejects every non-null value until the product icon contract is established.",
+  "privacy": "Shares contain category settings only; no user identity, ledger metadata, accounts, transactions, remarks, attachments or credentials."
+}

@@ -1,0 +1,25 @@
+rootProject.name = 'dianshixin-tencent-ab'
+include ':dianshixin'
+
+include ':app'
+
+include ':tuicore'
+project(':tuicore').projectDir = new File(settingsDir, '../TUIKit/TUICore/tuicore')
+
+include ':timcommon'
+project(':timcommon').projectDir = new File(settingsDir, '../TUIKit/TIMCommon/timcommon')
+
+include ':tuichat'
+project(':tuichat').projectDir = new File(settingsDir, '../TUIKit/TUIChat/tuichat')
+
+include ':tuicontact'
+project(':tuicontact').projectDir = new File(settingsDir, '../TUIKit/TUIContact/tuicontact')
+
+include ':tuiconversation'
+project(':tuiconversation').projectDir = new File(settingsDir, '../TUIKit/TUIConversation/tuiconversation')
+
+include ':tuisearch'
+project(':tuisearch').projectDir = new File(settingsDir, '../TUIKit/TUISearch/tuisearch')
+
+include ':tuicallkit-kt'
+project(':tuicallkit-kt').projectDir = new File(settingsDir, '../TUIKit/TUICallKit/tuicallkit-kt')

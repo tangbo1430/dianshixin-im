@@ -1,0 +1,87 @@
+{
+  "contractVersion": 1,
+  "storage": {
+    "provider": "private-local-filesystem",
+    "publicObjectKeys": false,
+    "maxBytes": 20971520,
+    "acceptedMime": ["image/bmp"],
+    "bmp": {
+      "compression": "BI_RGB",
+      "bitsPerPixel": [24, 32],
+      "maxSide": 8192,
+      "maxPixels": 40000000
+    },
+    "thumbnailing": "not-implemented",
+    "productionObjectStore": "not-implemented"
+  },
+  "routes": [
+    {
+      "method": "POST",
+      "path": "/v1/attachments/uploads",
+      "auth": "Bearer plus X-Device-Id",
+      "idempotency": "Idempotency-Key UUID",
+      "request": {
+        "sha256": "64 hex characters",
+        "bytes": "integer 1..20971520",
+        "mime": "image/bmp",
+        "purpose": "RECORD|AVATAR|ICON|FEEDBACK",
+        "epoch": "required only for RECORD"
+      },
+      "response": "attachmentId, uploadAuthorization, uploadPath, expiresAt, maxBytes, acceptedMime"
+    },
+    {
+      "method": "PUT",
+      "path": "/v1/attachments/uploads/{id}",
+      "auth": "Bearer plus X-Device-Id and X-Upload-Authorization",
+      "contentType": "image/bmp",
+      "limits": "stream capped by authorized bytes and 20 MiB",
+      "response": "204"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/attachments/{id}/complete",
+      "auth": "Bearer plus X-Device-Id",
+      "idempotency": "Idempotency-Key UUID must match upload authorization",
+      "request": {"declaredDigest": "64 hex characters"},
+      "response": "READY status after server digest, byte count, BMP dimensions and pixel bounds verify"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/attachments/{id}/status",
+      "auth": "Bearer plus X-Device-Id",
+      "response": "owner-only metadata; no filesystem path or object key"
+    },
+    {
+      "method": "POST",
+      "path": "/v1/attachments/{id}/download",
+      "auth": "Bearer plus X-Device-Id",
+      "response": "downloadAuthorization, downloadPath, expiresAt for the authenticated owner session"
+    },
+    {
+      "method": "GET",
+      "path": "/v1/attachments/{id}/download",
+      "auth": "Bearer plus X-Device-Id and X-Download-Authorization",
+      "response": "private BMP stream; exact configured HTTPS origin, owner and epoch checked, no-store"
+    },
+    {
+      "method": "DELETE",
+      "path": "/v1/attachments/{id}",
+      "auth": "Bearer plus X-Device-Id",
+      "response": "204 after references are absent; 24-hour delayed GC eligibility"
+    }
+  ],
+  "avatarReference": {
+    "profilePatch": "PATCH /v1/me with avatarId UUID to set or null to clear",
+    "eligible": "same owner, purpose AVATAR, attachment READY, object READY, epoch null",
+    "transaction": "user avatar field and attachment_references ref_kind AVATAR are changed atomically; existing reference is replaced"
+  },
+  "states": ["UPLOADING", "FILE_STAGED", "READY", "REJECTED", "EXPIRED", "DELETING"],
+  "references": ["ACTIVE", "STAGING", "SNAPSHOT", "PROTECTION", "AVATAR"],
+  "failureRules": [
+    "The opaque object key is server-generated, stored only in the database and never returned by DTOs.",
+    "Upload authorization is random, hashed at rest, session-bound, and scoped to the attachment, method, declared size, digest and expiry.",
+    "File fsync and atomic rename happen before FILE_STAGED; retrying complete can publish READY after a process crash.",
+    "Files are not removed by age or mtime; GC requires DELAYED GC_PENDING state, lease, and no explicit reference or live upload authorization.",
+    "A released file remains available to later references only if its reference was retained before DELETE; RESTORE/SNAPSHOT integration is not implemented."
+  ]
+}

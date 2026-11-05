@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {"id":"installment-tail","kind":"installment","principal":"10000","interest":"0","scale":2,"count":3,"mode":"TAIL","interestMode":"SPREAD","expectedPrincipal":"3333,3333,3334","expectedInterest":"0,0,0"},
+    {"id":"installment-head","kind":"installment","principal":"10000","interest":"0","scale":2,"count":3,"mode":"HEAD","interestMode":"SPREAD","expectedPrincipal":"3334,3333,3333","expectedInterest":"0,0,0"},
+    {"id":"installment-first-interest","kind":"installment","principal":"120000","interest":"6000","scale":2,"count":12,"mode":"TAIL","interestMode":"FIRST","expectedPrincipal":"10000,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000,10000","expectedInterest":"6000,0,0,0,0,0,0,0,0,0,0,0"},
+    {"id":"loan-equal-principal","kind":"loan","method":"EQUAL_PRINCIPAL","principal":"120000","scale":2,"count":12,"rateNum":12,"rateDen":100,"firstPrincipal":"10000","firstInterest":"1200","lastInterest":"100","interestTotal":"7800"},
+    {"id":"loan-equal-payment","kind":"loan","method":"EQUAL_PAYMENT","principal":"10000","scale":2,"count":2,"rateNum":12,"rateDen":100,"firstPrincipal":"4975","firstInterest":"100","lastPrincipal":"5025","interestTotal":"150"},
+    {"id":"loan-interest-only","kind":"loan","method":"INTEREST_ONLY","principal":"10000","scale":2,"count":2,"rateNum":12,"rateDen":100,"firstPrincipal":"0","firstInterest":"100","lastPrincipal":"10000","interestTotal":"200"},
+    {"id":"loan-flat-interest","kind":"loan","method":"FLAT_INTEREST","principal":"10000","scale":2,"count":2,"rateNum":12,"rateDen":100,"firstPrincipal":"5000","firstInterest":"100","lastInterest":"100","interestTotal":"200"},
+    {"id":"loan-zero-rate","kind":"loan","method":"EQUAL_PRINCIPAL","principal":"120000","scale":2,"count":12,"rateNum":0,"rateDen":100,"firstPrincipal":"10000","firstInterest":"0","lastInterest":"0","interestTotal":"0"},
+    {"id":"loan-normalized-i64-boundary","kind":"loan","method":"EQUAL_PRINCIPAL","principal":"9223372036854775807","scale":3,"count":1,"rateNum":0,"rateDen":1,"outputScale":6,"principalTotal":"9223372036854775807000","interestTotal":"0"},
+    {"id":"loan-tiny-many-terms","kind":"loan","method":"EQUAL_PRINCIPAL","principal":"1","scale":2,"count":1200,"rateNum":0,"rateDen":1,"principalTotal":"1","interestTotal":"0"},
+    {"id":"saving-52","kind":"ramp","first":"100","increment":"100","scale":2,"count":52,"total":"137800"},
+    {"id":"saving-365","kind":"ramp","first":"100","increment":"100","scale":2,"count":365,"total":"6679500"},
+    {"id":"saving-progress","kind":"progress","target":"10000","initial":"10000","deposits":"0","withdrawals":"2000","scale":2,"saved":"8000","remaining":"2000"},
+    {"id":"saving-over-target","kind":"progress","target":"10000","initial":"10000","deposits":"5000","withdrawals":"0","scale":2,"saved":"15000","remaining":"0"},
+    {"id":"saving-cancelled-large-sum","kind":"progress","target":"9223372036854777","initial":"9223372036854777","deposits":"9223372036854777","withdrawals":"9223372036854777","scale":3,"saved":"9223372036854777","remaining":"0"}
+  ],
+  "invalidCases": [
+    {"id":"zero-period","kind":"invalid","count":0,"expectedError":"INVALID_REQUEST"},
+    {"id":"negative-rate","kind":"invalid","rateNum":-1,"rateDen":100,"expectedError":"INVALID_REQUEST"},
+    {"id":"zero-denominator","kind":"invalid","rateNum":0,"rateDen":0,"expectedError":"INVALID_REQUEST"},
+    {"id":"precision-loss","kind":"invalid","principal":"1","scale":3,"count":2,"outputScale":2,"expectedError":"INVALID_MONEY"},
+    {"id":"true-final-overflow","kind":"invalid","principal":"9223372036854775807","scale":0,"count":2,"expectedError":"AMOUNT_OVERFLOW"},
+    {"id":"mismatched-currency","kind":"invalid","currency":"USD","otherCurrency":"CNY","expectedError":"INVALID_MONEY"}
+  ]
+}

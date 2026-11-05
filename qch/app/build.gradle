@@ -1,0 +1,181 @@
+apply plugin: 'com.android.application'
+// Vendor push files must be provisioned for the new package before enabling their plugins.
+if (providers.gradleProperty('cxymHonorPushConfigured').orElse('false').get().toBoolean()) {
+    apply plugin: 'com.hihonor.mcs.asplugin'
+}
+apply plugin: 'kotlin-android'
+
+def releaseSigningProperties = new Properties()
+def releaseSigningFile = rootProject.file('signing.properties')
+def hasReleaseSigning = releaseSigningFile.exists() && releaseSigningFile.length() > 0
+if (hasReleaseSigning) {
+    releaseSigningFile.withInputStream { releaseSigningProperties.load(it) }
+}
+
+android {
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(releaseSigningProperties['storeFile'])
+                storePassword releaseSigningProperties['storePassword']
+                keyAlias releaseSigningProperties['keyAlias']
+                keyPassword releaseSigningProperties['keyPassword']
+            }
+        }
+    }
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    namespace "com.qchm.xyz"
+
+    defaultConfig {
+        applicationId "com.dianadianxinb.app"
+        buildConfigField "String", "CXYM_CHANNEL", '"' + providers.gradleProperty('cxymChannel').orElse('common').get() + '"'
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion 36
+        versionCode 2
+        versionName "0.2.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled = true
+        buildConfigField "String", "API_BASE_URL", '"https://admin.awhaha.com"'
+        buildConfigField "boolean", "ENABLE_TIM_PUSH", "false"
+        ndk {
+            abiFilters = []
+            abiFilters.addAll(rootProject.ext.abiFilters)
+        }
+
+        manifestPlaceholders = [
+                "VIVO_APPKEY": (project.findProperty("VIVO_APPKEY") ?: System.getenv("VIVO_APPKEY") ?: ""),
+                "VIVO_APPID" : "",
+                "HONOR_APPID": ""
+        ]
+
+    }
+    buildFeatures {
+        buildConfig = true
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
+        }
+        qaRelease {
+            initWith release
+            matchingFallbacks = ['release']
+            minifyEnabled false
+            shrinkResources false
+            signingConfig hasReleaseSigning ? signingConfigs.release : signingConfigs.debug
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
+
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
+    }
+    kotlinOptions { jvmTarget = '17' }
+
+    sourceSets {
+        main {
+            res.srcDirs += "src/main/res-light"
+            res.srcDirs += "src/main/res-lively"
+            res.srcDirs += "src/main/res-serious"
+            java.exclude "com/qchm/xyz/signature/GenerateTestUserSig.java"
+        }
+    }
+
+    def paddingBytes = providers.gradleProperty('cxymPaddingBytes').orElse('0').get().toLong()
+    if (paddingBytes > 0) {
+        def paddingDirectory = layout.buildDirectory.dir('generated/deliveryPadding/assets')
+        sourceSets.main.assets.srcDir(paddingDirectory)
+        androidResources.noCompress += ['cxympad']
+        def generatePadding = tasks.register('generateDeliveryPadding') {
+            inputs.property('paddingBytes', paddingBytes)
+            outputs.dir(paddingDirectory)
+            doLast {
+                def directory = paddingDirectory.get().asFile
+                directory.mkdirs()
+                new File(directory, 'delivery.cxympad').withOutputStream { stream ->
+                    byte[] buffer = new byte[65536]
+                    long remaining = paddingBytes
+                    while (remaining > 0) {
+                        int count = (int) Math.min(remaining, buffer.length)
+                        stream.write(buffer, 0, count)
+                        remaining -= count
+                    }
+                }
+            }
+        }
+        tasks.named('preBuild').configure { dependsOn(generatePadding) }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: '../libs')
+    implementation 'androidx.multidex:multidex:2.0.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+
+    // Bugly artifacts are not included in the delivered offline source package.
+    // A no-op compatibility class is supplied for the debug build below.
+
+    def projects = this.rootProject.getAllprojects().stream().map { project -> project.name }.collect()
+    println "all projects : {$projects}"
+
+
+    // Will be added to the open source code START
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.android.material:material:1.4.0'
+
+    implementation 'com.github.bumptech.glide:glide:4.12.0'
+
+    api project(':tuiconversation')
+    api project(':tuicontact')
+    api project(':tuichat')
+    api project(':tuisearch')
+    api project(':tuicallkit-kt')
+    api project(':dianshixin')
+
+    api "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+    implementation 'com.lzy.net:okrx2:2.0.2'
+    implementation 'com.lzy.net:okserver:2.0.5'
+    // 添加zxing依赖
+    implementation 'com.journeyapps:zxing-android-embedded:4.3.0'
+
+    def timPushVersion = "8.5.6864"
+    implementation "com.tencent.timpush:timpush:$timPushVersion"
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    androidTestImplementation 'androidx.test:runner:1.7.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.3.0'
+
+
+}
+
+
+

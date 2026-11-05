@@ -1,0 +1,755 @@
+{
+  "schemaVersion": 1,
+  "policy": "D-refund-recovery-v1",
+  "specification": "docs/native-app/03-domain-and-calculations.md §6",
+  "acceptance": "T08/T09/T14 calculation only; no posting, setting or period acceptance",
+  "ordering": "Immutable refund creation order, including cancelled receipts; amounts are in the original expense currency. The service validates FX and selects whether excess is reported as income.",
+  "cases": [
+    {
+      "id": "no-refunds",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [],
+      "expected": {
+        "refunded": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "100",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": "T08-partial",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "30",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "30",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "70",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "30",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "T09-excess",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "120",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "120",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "20",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "100",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "20",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "multiple-crossing-principal",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "30",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "amount": {
+            "unscaled": "90",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "120",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "20",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "30",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          },
+          {
+            "refundId": "00000000-0000-4000-8000-000000000002",
+            "expenseReduction": {
+              "unscaled": "70",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "20",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "cancel-earlier-reclassifies-later",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "30",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": true
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "amount": {
+            "unscaled": "90",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "90",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "10",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000002",
+            "expenseReduction": {
+              "unscaled": "90",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "further-refund-after-full-refund",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "100",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "amount": {
+            "unscaled": "20",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "120",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "20",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "100",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          },
+          {
+            "refundId": "00000000-0000-4000-8000-000000000002",
+            "expenseReduction": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "20",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "mixed-exact-scales",
+      "original": {
+        "unscaled": "1250",
+        "scale": 2,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "1125",
+            "scale": 3,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "amount": {
+            "unscaled": "115",
+            "scale": 1,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "12625",
+          "scale": 3,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "125",
+          "scale": 3,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "1125",
+              "scale": 3,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          },
+          {
+            "refundId": "00000000-0000-4000-8000-000000000002",
+            "expenseReduction": {
+              "unscaled": "11375",
+              "scale": 3,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "125",
+              "scale": 3,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "zero-paid-principal",
+      "original": {
+        "unscaled": "0",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "5",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "5",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "5",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "5",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "cancel-only-refund",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "120",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": true
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "100",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": []
+      }
+    },
+    {
+      "id": "i64-principal-boundary",
+      "original": {
+        "unscaled": "9223372036854775807",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "9223372036854775807",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expected": {
+        "refunded": {
+          "unscaled": "9223372036854775807",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "netExpense": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "excessAmount": {
+          "unscaled": "0",
+          "scale": 0,
+          "currency": "CNY"
+        },
+        "effects": [
+          {
+            "refundId": "00000000-0000-4000-8000-000000000001",
+            "expenseReduction": {
+              "unscaled": "9223372036854775807",
+              "scale": 0,
+              "currency": "CNY"
+            },
+            "excessAmount": {
+              "unscaled": "0",
+              "scale": 0,
+              "currency": "CNY"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "invalidCases": [
+    {
+      "id": "negative-principal",
+      "original": {
+        "unscaled": "-1",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "zero-refund",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "0",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "negative-refund",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "-1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "duplicate-id",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "nil-id",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-0000-0000-000000000000",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "missing-fx-conversion",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "USD"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "cancelled-invalid-amount",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "0",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": true
+        }
+      ],
+      "expectedError": "INVALID_MONEY"
+    },
+    {
+      "id": "cancelled-duplicate-id",
+      "original": {
+        "unscaled": "100",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": true
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "INVALID_REQUEST"
+    },
+    {
+      "id": "received-total-overflow",
+      "original": {
+        "unscaled": "9223372036854775807",
+        "scale": 0,
+        "currency": "CNY"
+      },
+      "refunds": [
+        {
+          "id": "00000000-0000-4000-8000-000000000001",
+          "amount": {
+            "unscaled": "9223372036854775807",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000002",
+          "amount": {
+            "unscaled": "1",
+            "scale": 0,
+            "currency": "CNY"
+          },
+          "cancelled": false
+        }
+      ],
+      "expectedError": "AMOUNT_OVERFLOW"
+    }
+  ]
+}

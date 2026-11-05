@@ -1,0 +1,220 @@
+{
+  "contractVersion": 1,
+  "transport": "POST /v1/sync/push",
+  "envelope": {
+    "aggregateType": "import_batch",
+    "aggregateId": "batch UUID",
+    "baseVersions": {
+      "import_batch:<batch UUID>": 0
+    },
+    "schemaVersion": 1
+  },
+  "digests": {
+    "format": "lowercase-or-uppercase hex SHA-256; exactly 64 hex characters",
+    "fileDigest": "SHA-256 of the original source file bytes; client supplied and bound to prepare, not recomputed from normalized rows",
+    "chunkDigest": "SHA-256 of the exact canonicalRowsJson UTF-8 bytes supplied in import.append. The server rejects duplicate object keys recursively before typed decoding, then requires the parsed value to equal typed rows structurally. It does not require clients to match serde_json object key ordering or string escaping. Clients hash and send the same exact bytes. The server now preserves those validated bytes in the snapshot as an optional restore-proof field.",
+    "manifestDigest": "SHA-256 over chunks in ascending chunkIndex: for each chunk append chunkIndex as unsigned 32-bit big-endian bytes, then the 64 lowercase ASCII hex bytes of chunkDigest; no separators. A committed batch snapshot carries the validated manifest digest, full row-indexed mapping proof including skipped dispositions, and actual mapped Record plus server-generated record UUID for each pending row; these fields are optional for compatibility. Older committed batches without proof fail closed during restore with VALIDATION_UNSUPPORTED_IMPORT_PROOF."
+  },
+  "row": {
+    "rowIndex": "zero based source row ordinal, unique across the file",
+    "externalId": "optional stable identifier from the named source; null for generic CSV without a source identifier",
+    "record": {
+      "ledgerId": "UUID",
+      "categoryId": "UUID or null; required for EXPENSE/INCOME",
+      "occurredAt": "RFC3339 timestamp",
+      "timezone": "IANA zone",
+      "localDate": "YYYY-MM-DD matching occurredAt in timezone",
+      "remark": "string, at most 4000 characters",
+      "tagIds": [],
+      "attachmentIds": [],
+      "feeCategoryId": null,
+      "bonusCategoryId": null,
+      "input": {
+        "kind": "EXPENSE | INCOME | TRANSFER",
+        "EXPENSE": {
+          "gross": {
+            "unscaled": "12345",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "discount": null,
+          "allocations": [
+            {
+              "accountId": "UUID",
+              "amount": {
+                "unscaled": "12345",
+                "scale": 2,
+                "currency": "CNY"
+              }
+            }
+          ],
+          "countInStatistics": true,
+          "countInBudget": true
+        },
+        "INCOME": {
+          "amount": {
+            "unscaled": "12345",
+            "scale": 2,
+            "currency": "CNY"
+          },
+          "allocations": [
+            {
+              "accountId": "UUID",
+              "amount": {
+                "unscaled": "12345",
+                "scale": 2,
+                "currency": "CNY"
+              }
+            }
+          ],
+          "countInStatistics": true
+        },
+        "TRANSFER": {
+          "from": {
+            "accountId": "UUID",
+            "amount": {
+              "unscaled": "12345",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          "to": {
+            "accountId": "UUID",
+            "amount": {
+              "unscaled": "12345",
+              "scale": 2,
+              "currency": "CNY"
+            }
+          },
+          "fee": null,
+          "bonus": null
+        }
+      }
+    }
+  },
+  "commands": [
+    {
+      "commandType": "import.prepare",
+      "payload": {
+        "source": "vendor-name",
+        "formatVersion": 1,
+        "fileDigest": "<64 hex>",
+        "totalChunks": 1,
+        "totalRows": 1
+      },
+      "baseVersions": {
+        "import_batch:<batch UUID>": 0
+      }
+    },
+    {
+      "commandType": "import.append",
+      "payload": {
+        "chunkIndex": 0,
+        "chunkDigest": "<sha256 of exact canonicalRowsJson UTF-8 bytes>",
+        "canonicalRowsJson": "[{\"externalId\":null,\"record\":{\"attachmentIds\":[],\"bonusCategoryId\":null,\"categoryId\":\"<UUID>\",\"feeCategoryId\":null,\"input\":{\"allocations\":[{\"accountId\":\"<UUID>\",\"amount\":{\"currency\":\"CNY\",\"scale\":2,\"unscaled\":\"12345\"}}],\"countInBudget\":true,\"countInStatistics\":true,\"discount\":null,\"gross\":{\"currency\":\"CNY\",\"scale\":2,\"unscaled\":\"12345\"},\"kind\":\"EXPENSE\"},\"ledgerId\":\"<UUID>\",\"localDate\":\"2026-05-01\",\"occurredAt\":\"2026-05-01T08:00:00Z\",\"remark\":\"sample\",\"tagIds\":[],\"timezone\":\"Asia/Shanghai\"},\"rowIndex\":0}]",
+        "rows": [
+          {
+            "rowIndex": 0,
+            "externalId": null,
+            "record": {
+              "ledgerId": "<UUID>",
+              "categoryId": "<UUID>",
+              "occurredAt": "2026-05-01T08:00:00Z",
+              "timezone": "Asia/Shanghai",
+              "localDate": "2026-05-01",
+              "remark": "sample",
+              "tagIds": [],
+              "attachmentIds": [],
+              "feeCategoryId": null,
+              "bonusCategoryId": null,
+              "input": {
+                "kind": "EXPENSE",
+                "gross": {
+                  "unscaled": "12345",
+                  "scale": 2,
+                  "currency": "CNY"
+                },
+                "discount": null,
+                "allocations": [
+                  {
+                    "accountId": "<UUID>",
+                    "amount": {
+                      "unscaled": "12345",
+                      "scale": 2,
+                      "currency": "CNY"
+                    }
+                  }
+                ],
+                "countInStatistics": true,
+                "countInBudget": true
+              }
+            }
+          }
+        ]
+      },
+      "baseVersions": {
+        "import_batch:<batch UUID>": 1,
+        "ledger:<UUID>": 1,
+        "category:<UUID>": 1,
+        "account:<UUID>": 1
+      }
+    },
+    {
+      "commandType": "import.commit",
+      "payload": {
+        "expectedChunks": 1,
+        "manifestDigest": "<64 hex>",
+        "mappings": {},
+        "duplicatePolicy": "SKIP_CONFIRMED_EXTERNAL_ID"
+      },
+      "baseVersions": {
+        "import_batch:<batch UUID>": 2,
+        "ledger:<UUID>": 1,
+        "category:<UUID>": 1,
+        "account:<UUID>": 1
+      }
+    },
+    {
+      "commandType": "import.rollback",
+      "payload": {
+        "dependencyStrategy": "REJECT"
+      },
+      "baseVersions": {
+        "import_batch:<batch UUID>": 3,
+        "record:<created record UUID>": 1
+      }
+    }
+  ],
+  "limits": {
+    "fileBytes": 20971520,
+    "rows": 100000,
+    "chunks": 20000,
+    "chunkCanonicalJsonBytes": 1048576,
+    "httpPushBodyBytes": 1048576
+  },
+  "state": {
+    "prepare": "creates STAGING; no financial reads or balances change",
+    "append": "persists immutable indexed rows and chunks with stable entity ids and canonical changes; identical chunk index, exact canonicalRowsJson bytes, digest, and typed-row payload replay is idempotent; row-index overlap with any earlier chunk rejects immediately; different chunk bytes conflict",
+    "commit": "preflights complete manifest, row counts, mappings, source external identities, RecordWrite references, exact money and dates; atomically persists commit manifest/mapping proof, each pending row's actual record UUID, and each actual typed Record with all records/events/postings/stat/budget and COMMITTED status in the push group's single PostgreSQL transaction. Proof fields are optional canonical snapshot fields in existing tables and do not change the DATA5 44-table registry or snapshot schema/AAD.",
+    "rollback": "STAGING becomes CANCELLED and bounded staged data is cleared; COMMITTED checks dependencies for all imported facts, then reverses exact original postings and contributions atomically; later claim/refund/child/saving/loan references reject with DEPENDENCY_EXISTS; repeated rollback replays its operation receipt"
+  },
+  "duplicates": {
+    "key": "owner + epoch + source + externalId",
+    "genericCsv": "externalId must be null; amount/date similarity never deduplicates",
+    "policy": "SKIP_CONFIRMED_EXTERNAL_ID skips only rows whose stable source externalId already exists; other duplicatePolicy values reject"
+  },
+  "mapping": {
+    "keys": "source rowIndex decimal string",
+    "value": {
+      "ledgerId": "optional UUID",
+      "categoryIds": {
+        "<source category UUID>": "existing owner category UUID"
+      },
+      "accountIds": {
+        "<source account UUID>": "existing owner account UUID"
+      }
+    },
+    "rule": "maps only to existing owner metadata; server validates current revision/epoch/owner/selectability/direction/visibility; no fuzzy creation. For restore, original row payload is verified separately from the mapped actual Record persisted with its server-generated record UUID; duplicate-skipped rows carry no actual Record mapping and are not checked against active financial references."
+  },
+  "largeResult": "Normal push ACK canonicalization is capped at 1 MiB. Oversized commit emits only SNAPSHOT_REQUIRED control change, snapshotRequired=true and requiredCapturedSeq=commit seq; client must wait for snapshot capturedSeq >= requiredCapturedSeq before relying on imported server revisions. No partial changes advance the cursor."
+}
