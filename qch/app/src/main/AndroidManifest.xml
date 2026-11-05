@@ -51,7 +51,9 @@
             </intent-filter>
         </activity>
         <activity android:name="dev.icos.app.MainActivity"
-            android:theme="@style/Theme.Icos" tools:replace="android:theme" />
+            android:theme="@style/Theme.Icos"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            tools:replace="android:theme,android:windowSoftInputMode" />
         <activity android:name="com.qchm.xyz.SplashActivity" android:exported="false"
             android:launchMode="singleTask" android:theme="@style/SplashTheme" />
         <provider
@@ -145,4 +147,3 @@
         <activity android:name="com.tencent.qcloud.tuikit.tuichat.minimalistui.page.TUIGroupChatMinimalistActivity" android:windowSoftInputMode="adjustResize|stateHidden" tools:replace="android:windowSoftInputMode" />
     </application>
 </manifest>
-

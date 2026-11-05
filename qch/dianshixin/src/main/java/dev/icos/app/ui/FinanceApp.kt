@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -456,7 +457,7 @@ internal fun FinanceAppContent(
                 },
             ) { padding ->
                 Column(
-                    Modifier.fillMaxSize().padding(padding).then(
+                    Modifier.fillMaxSize().padding(padding).imePadding().then(
                         if (settingsOpen && settingsSection != "账本与分类") Modifier.verticalScroll(remember(settingsSection) { androidx.compose.foundation.ScrollState(0) }) else Modifier,
                     ),
                 ) {
@@ -2984,7 +2985,15 @@ private fun Accounts(
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text("我的账户", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-                TextButton(onClick = { managing = !managing }) { AppIcon(AppSymbol.SETTINGS); Text(if (managing) "完成管理" else "管理") }
+                TextButton(
+                    onClick = { managing = !managing },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                ) {
+                    AppIcon(AppSymbol.SETTINGS, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (managing) "完成管理" else "管理")
+                }
             }
         }
         if (managing) item { Text("账户显示范围按账本保存；资产与负债合计按全部账户计算。", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall) }
