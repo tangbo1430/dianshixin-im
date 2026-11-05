@@ -2991,10 +2991,10 @@ private fun Accounts(
                 Text("我的账户", Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
                 TextButton(
                     onClick = { managing = !managing },
-                    modifier = Modifier.heightIn(min = 48.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+                    modifier = Modifier.heightIn(min = 52.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
                 ) {
-                    AppIcon(AppSymbol.SETTINGS, modifier = Modifier.size(18.dp))
+                    AppIcon(AppSymbol.SETTINGS, modifier = Modifier.size(24.dp).padding(2.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(if (managing) "完成管理" else "管理")
                 }
