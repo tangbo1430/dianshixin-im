@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +26,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -155,7 +158,7 @@ internal fun FinanceApp(
     FinanceAppContent(model, auth, appearance, lock, receiptExport, onSessionReady, notificationPermissionStatus, requestNotificationPermission)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 internal fun FinanceAppContent(
     model: FinanceViewModel,
@@ -188,6 +191,7 @@ internal fun FinanceAppContent(
             ThemePreference.DARK -> true
         }
     val colors = icosColorScheme(darkTheme, appearanceState.settings.themeColor)
+    val imeVisible = WindowInsets.isImeVisible
     val activity = LocalContext.current.findActivity()
     SideEffect {
         activity?.let { currentActivity ->
@@ -420,7 +424,7 @@ internal fun FinanceAppContent(
                     )
                 },
                 bottomBar = {
-                    if (!settingsOpen && !(selected == 3 && model.selectedSavingId != null)) {
+                    if (!imeVisible && !settingsOpen && !(selected == 3 && model.selectedSavingId != null)) {
                         NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
                             tabs.forEachIndexed { index, label ->
                                 if (index == 2) {
